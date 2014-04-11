@@ -1,0 +1,56 @@
+/*****************************************************************************/
+/*
+/* Common
+/*
+/*****************************************************************************/
+
+html, body { height: 100%; }
+
+body {
+  background-color: #FFF;
+  font: 13.34px Helvetica, Arial, sans-serif;
+  font-size: small;
+  text-align: center;
+}
+
+h1 { margin-bottom: 1em; }
+p { margin: 1em 0; }
+
+a         { color: #00a; }
+a:hover   { color: #000; }
+a:visited { color: #a0a; }
+
+/*****************************************************************************/
+/*
+/* Site
+/*
+/*****************************************************************************/
+
+.site {
+  font-size: 115%;
+  text-align: justify;
+  width: 42em;
+  margin: 3em auto 2em;
+  line-height: 1.5em;
+}
+
+.site .footer {
+  font-size: 80%;
+  color: #666;
+  border-top: 4px solid #eee;
+  margin-top: 2em;
+  overflow: hidden;
+}
+
+.site .footer li {
+  margin-top: 0pt;
+}
+
+.site .footer ul {
+  margin-top: 0pt;
+}
+
+.site .footer p {
+  margin-bottom: 0pt;
+}
+

@@ -1,0 +1,4 @@
+name: Reactive Streams
+markdown: kramdown
+kramdown:
+  input: GFM
