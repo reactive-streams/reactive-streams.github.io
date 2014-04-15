@@ -5,7 +5,9 @@ Reactive Streams is an initiative to provide a standard for asynchronous stream 
 ## The Problem
 
 Handling streams of data—especially “live” data whose volume is not predetermined—requires special care in an asynchronous system. The most prominent issue is that resource consumption needs to be carefully controlled such that a fast data source does not overwhelm the stream destination. Asynchrony is needed in order to enable the parallel use of computing resources, on collaborating network hosts or multiple CPU cores within a single machine.
+
 The main goal of Reactive Streams is to govern the exchange of stream data across an asynchronous boundary—think passing elements on to another thread or thread-pool—while ensuring that the receiving side is not forced to buffer arbitrary amounts of data. In other words, back pressure is an integral part of this model in order to allow the queues which mediate between threads to be bounded. The benefits of asynchronous processing would be negated if the communication of back pressure were synchronous (see also the [Reactive Manifesto](http://reactivemanifesto.org/)), therefore care has been taken to mandate fully non-blocking and asynchronous behavior of all aspects of a Reactive Streams implementation.
+
 It is the intention of this specification to allow the creation of many conforming implementations, which by virtue of abiding by the rules will be able to interoperate smoothly, preserving the aforementioned benefits and characteristics across the whole processing graph of a stream application.
 Scope
 
@@ -34,7 +36,7 @@ For feedback on
 
 * the draft spec, the Reactive Streams initiative or general feedback:
 
-    please open an Issue on the Reactive Streams project[e].
+    please open an Issue on the [Reactive Streams project](https://github.com/reactive-streams/reactive-streams/issues).
     
 * the implementations themselves:
 
@@ -43,8 +45,7 @@ For feedback on
 ### Implementations of the draft spec
 
 * Akka Streams
-   * Project[f]
-   * Get started[g]
+   * [Akka Project](http://akka.io/)
    * [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html)
 * Reactor Composable
    * [Reactor (1.1+)](http://github.com/reactor/reactor)
