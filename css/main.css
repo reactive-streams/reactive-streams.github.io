@@ -38,19 +38,27 @@ a:visited { color: #a0a; }
   font-size: 80%;
   color: #666;
   border-top: 4px solid #eee;
+  border-bottom: 4px solid #eee;
   margin-top: 2em;
+  padding-top: 2em;
+  padding-bottom: 2em;
   overflow: hidden;
+  text-align: center;
 }
 
-.site .footer li {
-  margin-top: 0pt;
+.site .footer .company {
+  width: 12em;
+  display: inline-block;
+  text-align: left;
 }
 
-.site .footer ul {
-  margin-top: 0pt;
+.site .footer .person {
+  width: 12em;
+  display: inline-block;
+  text-align: right;
 }
 
 .site .footer p {
-  margin-bottom: 0pt;
+  margin: 0pt;
 }
 
