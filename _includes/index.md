@@ -9,7 +9,8 @@ Handling streams of data—especially “live” data whose volume is not predet
 The main goal of Reactive Streams is to govern the exchange of stream data across an asynchronous boundary—think passing elements on to another thread or thread-pool—while ensuring that the receiving side is not forced to buffer arbitrary amounts of data. In other words, back pressure is an integral part of this model in order to allow the queues which mediate between threads to be bounded. The benefits of asynchronous processing would be negated if the communication of back pressure were synchronous (see also the [Reactive Manifesto](http://reactivemanifesto.org/)), therefore care has been taken to mandate fully non-blocking and asynchronous behavior of all aspects of a Reactive Streams implementation.
 
 It is the intention of this specification to allow the creation of many conforming implementations, which by virtue of abiding by the rules will be able to interoperate smoothly, preserving the aforementioned benefits and characteristics across the whole processing graph of a stream application.
-Scope
+
+## Scope
 
 The scope of Reactive Streams is to find a minimal set of interfaces and methods that will describe the necessary operations and entities to achieve the goal—asynchronous streams of data with non-blocking back pressure.
 
@@ -37,7 +38,7 @@ For feedback on
 * the draft spec, the Reactive Streams initiative or general feedback:
 
     please open an Issue on the [Reactive Streams project](https://github.com/reactive-streams/reactive-streams/issues).
-    
+
 * the implementations themselves:
 
     please direct that to the implementor via their preferred feedback system listed below.
