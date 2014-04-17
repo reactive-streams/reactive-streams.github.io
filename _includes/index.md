@@ -45,8 +45,8 @@ For feedback on
 ### Implementations of the draft spec
 
 * Akka Streams
-   * [Akka Project](http://akka.io/)
-   * [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html)
+   * See this [Activator template](http://www.typesafe.com/activator/template/akka-stream-scala) introducing the [Akka Project](http://akka.io/) implementation in Scala; a Java version will follow shortly.
+   * Please give [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html) on the issue tracker.
 * Reactor Composable
    * [Reactor (1.1+)](http://github.com/reactor/reactor)
    * Current Implementation Draft is being explored for 1.1 and onwards, see Reactor Composable
