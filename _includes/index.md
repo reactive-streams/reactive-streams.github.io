@@ -22,10 +22,10 @@ We anticipate that acceptance of this Reactive Streams specification and experie
 
 Available immediately is a First Draft Specification covering:
 
-* [Semantics](https://github.com/reactive-streams/reactive-streams/blob/master/tck/src/main/resources/spec.md)—a specification document
-* [API](https://github.com/reactive-streams/reactive-streams/tree/master/spi/src/main/java/org/reactivestreams/api/)—Java interfaces for end users
-* [SPI](https://github.com/reactive-streams/reactive-streams/tree/master/spi/src/main/java/org/reactivestreams/spi/)—Java interfaces for implementations
-* [TCK](https://github.com/reactive-streams/reactive-streams/tree/master/tck/src/main/java/org/reactivestreams/tck/)—a test harness to validate implementations and guide implementors
+* [Semantics](https://github.com/reactive-streams/reactive-streams/blob/v0.3/tck/src/main/resources/spec.md)—a specification document
+* [API](https://github.com/reactive-streams/reactive-streams/tree/v0.3/spi/src/main/java/org/reactivestreams/api/)—Java interfaces for end users
+* [SPI](https://github.com/reactive-streams/reactive-streams/tree/v0.3/spi/src/main/java/org/reactivestreams/spi/)—Java interfaces for implementations
+* [TCK](https://github.com/reactive-streams/reactive-streams/tree/v0.3/tck/src/main/java/org/reactivestreams/tck/)—a test harness to validate implementations and guide implementors
 
 All of the parts of the Draft Proposal is released under [Creative Commons Zero](http://creativecommons.org/publicdomain/zero/1.0) (Public Domain).
 
@@ -56,4 +56,4 @@ For feedback on
 
 ## Implementors
 
-To get started implementing the draft specification, it is recommended to start by reading the [README](https://github.com/reactive-streams/reactive-streams/blob/master/README.md), then taking a look at the [Specification](https://github.com/reactive-streams/reactive-streams/blob/master/tck/src/main/resources/spec.md) then taking a look at the [TCK](https://github.com/reactive-streams/reactive-streams/tree/master/tck/src/main/java/org/reactivestreams/tck/). If you have an issue with any of the above, please take a look at [closed issues](https://github.com/reactive-streams/reactive-streams/issues?page=1&state=closed) and then open a [new issue](https://github.com/reactive-streams/reactive-streams/issues/new) if it has not already been answered.
+To get started implementing the draft specification, it is recommended to start by reading the [README](https://github.com/reactive-streams/reactive-streams/blob/v0.3/README.md), then taking a look at the [Specification](https://github.com/reactive-streams/reactive-streams/blob/v0.3/tck/src/main/resources/spec.md) then taking a look at the [TCK](https://github.com/reactive-streams/reactive-streams/tree/v0.3/tck/src/main/java/org/reactivestreams/tck/). If you have an issue with any of the above, please take a look at [closed issues](https://github.com/reactive-streams/reactive-streams/issues?page=1&state=closed) and then open a [new issue](https://github.com/reactive-streams/reactive-streams/issues/new) if it has not already been answered.
