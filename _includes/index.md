@@ -53,6 +53,8 @@ For feedback on
    * Current Implementation Draft is being explored for 1.1 and onwards, see Reactor Composable
 * RxJava
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
+* [Ratpack](http://www.ratpack.io)
+   * See the [“Streams”](http://www.ratpack.io/manual/current/streams.html) chapter of the manual.
 
 ## Implementors
 
