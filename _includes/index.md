@@ -55,6 +55,8 @@ For feedback on
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
 * [Ratpack](http://www.ratpack.io)
    * See the [“Streams”](http://www.ratpack.io/manual/current/streams.html) chapter of the manual.
+* [Vert.x 3.0](http://vertx.io)
+   * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [https://github.com/vert-x3/ext/tree/master/ext-reactive-streams](here)
 
 ## Implementors
 
