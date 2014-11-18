@@ -55,6 +55,9 @@ For feedback on
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
 * [Ratpack](http://www.ratpack.io)
    * See the [“Streams”](http://www.ratpack.io/manual/current/streams.html) chapter of the manual.
+* Reactive Rabbit
+   * Driver for RabbitMQ/AMQP.
+   * See [github.com/ScalaConsultants/reactive-rabbit](https://github.com/ScalaConsultants/reactive-rabbit).
 
 ## Implementors
 
