@@ -70,6 +70,9 @@ All artifacts and specifications are released under [Creative Commons Zero](http
    * Please give [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html) on the issue tracker.
 * [Ratpack](http://www.ratpack.io)
    * See the [“Streams”](http://www.ratpack.io/manual/current/streams.html) chapter of the manual.
+* Reactive Rabbit
+   * Driver for RabbitMQ/AMQP.
+   * See [github.com/ScalaConsultants/reactive-rabbit](https://github.com/ScalaConsultants/reactive-rabbit).
 * [Reactor](http://projectreactor.io/)
    * For the documentation see [here](http://projectreactor.io/docs/reference/streams.html).
 * [RxJava](http://reactivex.io/)
