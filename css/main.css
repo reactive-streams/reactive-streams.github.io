@@ -62,6 +62,10 @@ a:visited { color: #08a; }
   text-align: center;
 }
 
+.site .footer .heading {
+  font-style: italic;
+}
+
 .site .footer .company {
   width: 12em;
   display: inline-block;
