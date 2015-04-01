@@ -23,8 +23,8 @@ We anticipate that acceptance of this Reactive Streams specification and experie
 Available immediately is a First Draft Specification covering:
 
 * [Semantics](https://github.com/reactive-streams/reactive-streams/blob/v1.0.0.RC4/README.md#specification)—a specification document
-* [API](https://github.com/reactive-streams/reactive-streams/tree/v1.0.0.RC4/api/src/main/java/org/reactivestreams)—Java interfaces for implementations ([javadoc](https://github.com/reactive-streams/reactive-streams.github.io/tree/master/reactive-streams-1.0.0.RC4-javadoc))
-* [TCK](https://github.com/reactive-streams/reactive-streams/tree/v1.0.0.RC4/tck)—a test harness to validate implementations and guide implementor ([javadoc](https://github.com/reactive-streams/reactive-streams.github.io/tree/master/reactive-streams-tck-1.0.0.RC4-javadoc))
+* [API](https://github.com/reactive-streams/reactive-streams/tree/v1.0.0.RC4/api/src/main/java/org/reactivestreams)—Java interfaces for implementations ([javadoc](https://reactive-streams.github.io/reactive-streams-1.0.0.RC4-javadoc))
+* [TCK](https://github.com/reactive-streams/reactive-streams/tree/v1.0.0.RC4/tck)—a test harness to validate implementations and guide implementor ([javadoc](https://reactive-streams.github.io/reactive-streams-1.0.0.RC4-javadoc))
 
 All of the parts of the Draft Proposal is released under [Creative Commons Zero](http://creativecommons.org/publicdomain/zero/1.0) (Public Domain).
 
