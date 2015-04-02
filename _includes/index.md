@@ -78,7 +78,7 @@ All artifacts and specifications are released under [Creative Commons Zero](http
 * [RxJava](http://reactivex.io/) *(tested with TCK 1.0.0.RC4)*
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
 * [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0.RC4)*
-   * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [here](https://github.com/vert-x3/ext/tree/master/ext-reactive-streams).
+   * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
 
 ##### A Note for Implementors
 
