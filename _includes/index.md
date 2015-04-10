@@ -65,7 +65,7 @@ All artifacts and specifications are released under [Creative Commons Zero](http
 
 #### On the JVM
 
-* [Akka](http://akka.io/) Streams *(tested with TCK 1.0.0.RC4)*
+* [Akka](http://akka.io/) Streams *(tested with TCK 1.0.0.RC5)*
    * See this [Activator template](http://www.typesafe.com/activator/template/akka-stream-scala) and the [documentation](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-M5/index.html).
    * Please give [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html) on the issue tracker.
 * [Ratpack](http://www.ratpack.io) *(tested with TCK 1.0.0.RC5)*
