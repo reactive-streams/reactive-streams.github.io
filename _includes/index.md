@@ -44,7 +44,7 @@ This work is performed in the [reactive-streams-io](https://github.com/reactive-
 
 ## Current State
 
-As of Apr 1, 2015 we have released version 1.0.0-RC5 of Reactive Streams for the JVM, including Java [API](http://www.reactive-streams.org/reactive-streams-1.0.0.RC5-javadoc), a textual [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0.RC5/README.md#specification) and a [TCK](http://www.reactive-streams.org/reactive-streams-tck-1.0.0.RC5-javadoc). Corresponding code artifacts are available on Maven Central:
+As of Apr 10, 2015 we have released version 1.0.0-RC5 of Reactive Streams for the JVM, including Java [API](http://www.reactive-streams.org/reactive-streams-1.0.0.RC5-javadoc), a textual [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0.RC5/README.md#specification) and a [TCK](http://www.reactive-streams.org/reactive-streams-tck-1.0.0.RC5-javadoc). Corresponding code artifacts are available on Maven Central:
 
     <dependency>
       <groupId>org.reactivestreams</groupId>
