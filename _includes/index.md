@@ -73,14 +73,14 @@ All artifacts and specifications are released under [Creative Commons Zero](http
 * Reactive Rabbit *(tested with TCK 1.0.0.RC3)*
    * Driver for RabbitMQ/AMQP.
    * See [github.com/ScalaConsultants/reactive-rabbit](https://github.com/ScalaConsultants/reactive-rabbit).
-* [Reactor](http://projectreactor.io/) *(tested with TCK 1.0.0.RC4)*
+* [Reactor](http://projectreactor.io/) *(tested with TCK 1.0.0.RC5)*
    * For the documentation see [here](http://projectreactor.io/docs/reference/streams.html).
-* [RxJava](http://reactivex.io/) *(tested with TCK 1.0.0.RC4)*
+* [RxJava](http://reactivex.io/) *(tested with TCK 1.0.0.RC5)*
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
-* [Slick](http://slick.typesafe.com/) *(tested with TCK 1.0.0.RC4)*
+* [Slick](http://slick.typesafe.com/) *(tested with TCK 1.0.0.RC5)*
    * Provides a *Publisher* for streaming database query results.
    * See the ["Streaming"](http://slick.typesafe.com/doc/3.0.0-RC3/dbio.html#streaming) section of the manual.
-* [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0.RC4)*
+* [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0.RC5)*
    * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
 
 ##### A Note for Implementors
