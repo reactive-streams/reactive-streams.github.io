@@ -68,6 +68,8 @@ All artifacts and specifications are released under [Creative Commons Zero](http
 * [Akka](http://akka.io/) Streams *(tested with TCK 1.0.0.RC5)*
    * See this [Activator template](http://www.typesafe.com/activator/template/akka-stream-scala) and the [documentation](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-M5/index.html).
    * Please give [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html) on the issue tracker.
+* [MongoDB](http://mongodb.org) *(tested with TCK 1.0.0.RC5)*
+   * For the documentation see [here](http://mongodb.github.io/mongo-java-driver-reactivestreams).
 * [Ratpack](http://www.ratpack.io) *(tested with TCK 1.0.0.RC5)*
    * See the [“Streams”](http://www.ratpack.io/manual/current/streams.html) chapter of the manual.
 * Reactive Rabbit *(tested with TCK 1.0.0.RC3)*
@@ -82,8 +84,6 @@ All artifacts and specifications are released under [Creative Commons Zero](http
    * See the ["Streaming"](http://slick.typesafe.com/doc/3.0.0-RC3/dbio.html#streaming) section of the manual.
 * [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0.RC5)*
    * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
-* [MongoDB](http://mongodb.org) *(tested with TCK 1.0.0.RC5)*
-   * For the documentation see [here](http://mongodb.github.io/mongo-java-driver-reactivestreams).
 
 ##### A Note for Implementors
 
