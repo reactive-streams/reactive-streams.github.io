@@ -82,6 +82,8 @@ All artifacts and specifications are released under [Creative Commons Zero](http
    * See the ["Streaming"](http://slick.typesafe.com/doc/3.0.0-RC3/dbio.html#streaming) section of the manual.
 * [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0.RC5)*
    * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
+* [MongoDB](http://mongodb.org) *(tested with TCK 1.0.0.RC5)*
+   * For the documentation see [here](http://mongodb.github.io/mongo-java-driver-reactivestreams).
 
 ##### A Note for Implementors
 
