@@ -44,20 +44,20 @@ This work is performed in the [reactive-streams-io](https://github.com/reactive-
 
 ## Current State
 
-As of Apr 10, 2015 we have released version 1.0.0-RC5 of Reactive Streams for the JVM, including Java [API](http://www.reactive-streams.org/reactive-streams-1.0.0.RC5-javadoc), a textual [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0.RC5/README.md#specification) and a [TCK](http://www.reactive-streams.org/reactive-streams-tck-1.0.0.RC5-javadoc). Corresponding code artifacts are available on Maven Central:
+As of April 30, 2015 we have released version 1.0.0 of Reactive Streams for the JVM, including Java [API](/reactive-streams-1.0.0-javadoc), a textual [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0/README.md#specification), a [TCK](/reactive-streams-tck-1.0.0-javadoc) and [implementation examples](/reactive-streams-examples-1.0.0-javadoc). Corresponding code artifacts are available on Maven Central:
 
     <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
-      <version>1.0.0.RC5</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams-tck</artifactId>
-      <version>1.0.0.RC5</version>
+      <version>1.0.0</version>
     </dependency>
 
-The source code for these is available on [github](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0.RC5). Please use github issues for providing feedback.
+The source code for these is available on [github](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0). Please use github issues for providing feedback.
 
 All artifacts and specifications are released under [Creative Commons Zero](http://creativecommons.org/publicdomain/zero/1.0) into the Public Domain.
 
@@ -65,26 +65,26 @@ All artifacts and specifications are released under [Creative Commons Zero](http
 
 #### On the JVM
 
-* [Akka](http://akka.io/) Streams *(tested with TCK 1.0.0.RC5)*
+* [Akka](http://akka.io/) Streams *(tested with TCK 1.0.0)*
    * See this [Activator template](http://www.typesafe.com/activator/template/akka-stream-scala) and the [documentation](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-M5/index.html).
    * Please give [Feedback](http://doc.akka.io/docs/akka/current/project/issue-tracking.html) on the issue tracker.
-* [MongoDB](http://mongodb.org) *(tested with TCK 1.0.0.RC5)*
+* [MongoDB](http://mongodb.org) *(tested with TCK 1.0.0)*
    * For the documentation see [here](http://mongodb.github.io/mongo-java-driver-reactivestreams).
-* [Ratpack](http://www.ratpack.io) *(tested with TCK 1.0.0.RC5)*
+* [Ratpack](http://www.ratpack.io) *(tested with TCK 1.0.0)*
    * See the [“Streams”](http://www.ratpack.io/manual/current/streams.html) chapter of the manual.
 * Reactive Rabbit *(tested with TCK 1.0.0.RC3)*
    * Driver for RabbitMQ/AMQP.
    * See [github.com/ScalaConsultants/reactive-rabbit](https://github.com/ScalaConsultants/reactive-rabbit).
-* [Reactor](http://projectreactor.io/) *(tested with TCK 1.0.0.RC5)*
+* [Reactor](http://projectreactor.io/) *(tested with TCK 1.0.0)*
    * For the documentation see [here](http://projectreactor.io/docs/reference/streams.html).
-* [RxJava](http://reactivex.io/) *(tested with TCK 1.0.0.RC5)*
+* [RxJava](http://reactivex.io/) *(tested with TCK 1.0.0)*
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
-* [Slick](http://slick.typesafe.com/) *(tested with TCK 1.0.0.RC5)*
+* [Slick](http://slick.typesafe.com/) *(tested with TCK 1.0.0)*
    * Provides a *Publisher* for streaming database query results.
    * See the ["Streaming"](http://slick.typesafe.com/doc/3.0.0-RC3/dbio.html#streaming) section of the manual.
-* [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0.RC5)*
+* [Vert.x 3.0](http://vertx.io) *(tested with TCK 1.0.0)*
    * Vert.x 3.0 is currently in alpha. The reactive streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
 
 ##### A Note for Implementors
 
-To get started implementing the draft specification, it is recommended to start by reading the [README](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0.RC5/README.md) and the [Java API documentation](http://www.reactive-streams.org/reactive-streams-1.0.0.RC5-javadoc), then taking a look at the [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0.RC5/README.md#specification) then taking a look at the [TCK](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0.RC5/tck). If you have an issue with any of the above, please take a look at [closed issues](https://github.com/reactive-streams/reactive-streams-jvm/issues?page=1&state=closed) and then open a [new issue](https://github.com/reactive-streams/reactive-streams-jvm/issues/new) if it has not already been answered.
+To get started implementing the draft specification, it is recommended to start by reading the [README](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0/README.md) and the [Java API documentation](/reactive-streams-1.0.0-javadoc), then taking a look at the [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0/README.md#specification) then taking a look at the [TCK](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0/tck) and the [example implementations](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0/examples/src/main/java/org/reactivestreams/example/unicast). If you have an issue with any of the above, please take a look at [closed issues](https://github.com/reactive-streams/reactive-streams-jvm/issues?page=1&state=closed) and then open a [new issue](https://github.com/reactive-streams/reactive-streams-jvm/issues/new) if it has not already been answered.

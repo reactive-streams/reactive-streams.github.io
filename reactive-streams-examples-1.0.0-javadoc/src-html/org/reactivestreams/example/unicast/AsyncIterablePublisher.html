@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="sv">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.reactivestreams.example.unicast;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.reactivestreams.Publisher;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.reactivestreams.Subscriber;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.reactivestreams.Subscription;<a name="line.5"></a>
+<span class="sourceLineNo">006</span><a name="line.6"></a>
+<span class="sourceLineNo">007</span>import java.util.Iterator;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import java.util.Collections;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import java.util.concurrent.Executor;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import java.util.concurrent.atomic.AtomicBoolean;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import java.util.concurrent.ConcurrentLinkedQueue;<a name="line.11"></a>
+<span class="sourceLineNo">012</span><a name="line.12"></a>
+<span class="sourceLineNo">013</span>/**<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * AsyncIterablePublisher is an implementation of Reactive Streams `Publisher`<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * which executes asynchronously, using a provided `Executor` and produces elements<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * from a given `Iterable` in a "unicast" configuration to its `Subscribers`.<a name="line.16"></a>
+<span class="sourceLineNo">017</span> *<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * NOTE: The code below uses a lot of try-catches to show the reader where exceptions can be expected, and where they are forbidden.<a name="line.18"></a>
+<span class="sourceLineNo">019</span> */<a name="line.19"></a>
+<span class="sourceLineNo">020</span>public class AsyncIterablePublisher&lt;T&gt; implements Publisher&lt;T&gt; {<a name="line.20"></a>
+<span class="sourceLineNo">021</span>  private final static int DEFAULT_BATCHSIZE = 1024;<a name="line.21"></a>
+<span class="sourceLineNo">022</span><a name="line.22"></a>
+<span class="sourceLineNo">023</span>  private final Iterable&lt;T&gt; elements; // This is our data source / generator<a name="line.23"></a>
+<span class="sourceLineNo">024</span>  private final Executor executor; // This is our thread pool, which will make sure that our Publisher runs asynchronously to its Subscribers<a name="line.24"></a>
+<span class="sourceLineNo">025</span>  private final int batchSize; // In general, if one uses an `Executor`, one should be nice nad not hog a thread for too long, this is the cap for that, in elements<a name="line.25"></a>
+<span class="sourceLineNo">026</span><a name="line.26"></a>
+<span class="sourceLineNo">027</span>  public AsyncIterablePublisher(final Iterable&lt;T&gt; elements, final Executor executor) {<a name="line.27"></a>
+<span class="sourceLineNo">028</span>    this(elements, DEFAULT_BATCHSIZE, executor);<a name="line.28"></a>
+<span class="sourceLineNo">029</span>  }<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>  public AsyncIterablePublisher(final Iterable&lt;T&gt; elements, final int batchSize, final Executor executor) {<a name="line.31"></a>
+<span class="sourceLineNo">032</span>    if (elements == null) throw null;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>    if (executor == null) throw null;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>    if (batchSize &lt; 1) throw new IllegalArgumentException("batchSize must be greater than zero!");<a name="line.34"></a>
+<span class="sourceLineNo">035</span>    this.elements = elements;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    this.executor = executor;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    this.batchSize = batchSize;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>  }<a name="line.38"></a>
+<span class="sourceLineNo">039</span><a name="line.39"></a>
+<span class="sourceLineNo">040</span>  @Override<a name="line.40"></a>
+<span class="sourceLineNo">041</span>  public void subscribe(final Subscriber&lt;? super T&gt; s) {<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    // As per rule 1.11, we have decided to support multiple subscribers in a unicast configuration<a name="line.42"></a>
+<span class="sourceLineNo">043</span>    // for this `Publisher` implementation.<a name="line.43"></a>
+<span class="sourceLineNo">044</span>    // As per 2.13, this method must return normally (i.e. not throw)<a name="line.44"></a>
+<span class="sourceLineNo">045</span>    new SubscriptionImpl(s).init();<a name="line.45"></a>
+<span class="sourceLineNo">046</span>  }<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>  // These represent the protocol of the `AsyncIterablePublishers` SubscriptionImpls<a name="line.48"></a>
+<span class="sourceLineNo">049</span>  static interface Signal {};<a name="line.49"></a>
+<span class="sourceLineNo">050</span>  enum Cancel implements Signal { Instance; };<a name="line.50"></a>
+<span class="sourceLineNo">051</span>  enum Subscribe implements Signal { Instance; };<a name="line.51"></a>
+<span class="sourceLineNo">052</span>  enum Send implements Signal { Instance; };<a name="line.52"></a>
+<span class="sourceLineNo">053</span>  static final class Request implements Signal {<a name="line.53"></a>
+<span class="sourceLineNo">054</span>    final long n;<a name="line.54"></a>
+<span class="sourceLineNo">055</span>    Request(final long n) {<a name="line.55"></a>
+<span class="sourceLineNo">056</span>      this.n = n;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>    }<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  };<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>  // This is our implementation of the Reactive Streams `Subscription`,<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  // which represents the association between a `Publisher` and a `Subscriber`.<a name="line.61"></a>
+<span class="sourceLineNo">062</span>  final class SubscriptionImpl implements Subscription, Runnable {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    final Subscriber&lt;? super T&gt; subscriber; // We need a reference to the `Subscriber` so we can talk to it<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    private boolean cancelled = false; // This flag will track whether this `Subscription` is to be considered cancelled or not<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    private long demand = 0; // Here we track the current demand, i.e. what has been requested but not yet delivered<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    private Iterator&lt;T&gt; iterator; // This is our cursor into the data stream, which we will send to the `Subscriber`<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>    SubscriptionImpl(final Subscriber&lt;? super T&gt; subscriber) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>      // As per rule 1.09, we need to throw a `java.lang.NullPointerException` if the `Subscriber` is `null`<a name="line.69"></a>
+<span class="sourceLineNo">070</span>      if (subscriber == null) throw null;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>      this.subscriber = subscriber;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>    // This `ConcurrentLinkedQueue` will track signals that are sent to this `Subscription`, like `request` and `cancel`<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    private final ConcurrentLinkedQueue&lt;Signal&gt; inboundSignals = new ConcurrentLinkedQueue&lt;Signal&gt;();<a name="line.75"></a>
+<span class="sourceLineNo">076</span><a name="line.76"></a>
+<span class="sourceLineNo">077</span>    // We are using this `AtomicBoolean` to make sure that this `Subscription` doesn't run concurrently with itself,<a name="line.77"></a>
+<span class="sourceLineNo">078</span>    // which would violate rule 1.3 among others (no concurrent notifications).<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    private final AtomicBoolean on = new AtomicBoolean(false);<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    // This method will register inbound demand from our `Subscriber` and validate it against rule 3.9 and rule 3.17<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    private void doRequest(final long n) {<a name="line.82"></a>
+<span class="sourceLineNo">083</span>      if (n &lt; 1)<a name="line.83"></a>
+<span class="sourceLineNo">084</span>        terminateDueTo(new IllegalArgumentException(subscriber + " violated the Reactive Streams rule 3.9 by requesting a non-positive number of elements."));<a name="line.84"></a>
+<span class="sourceLineNo">085</span>      else if (demand + n &lt; 1) {<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        // As governed by rule 3.17, when demand overflows `Long.MAX_VALUE` we treat the signalled demand as "effectively unbounded"<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        demand = Long.MAX_VALUE;  // Here we protect from the overflow and treat it as "effectively unbounded"<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        doSend(); // Then we proceed with sending data downstream<a name="line.88"></a>
+<span class="sourceLineNo">089</span>      } else {<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        demand += n; // Here we record the downstream demand<a name="line.90"></a>
+<span class="sourceLineNo">091</span>        doSend(); // Then we can proceed with sending data downstream<a name="line.91"></a>
+<span class="sourceLineNo">092</span>      }<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    }<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>    // This handles cancellation requests, and is idempotent, thread-safe and not synchronously performing heavy computations as specified in rule 3.5<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    private void doCancel() {<a name="line.96"></a>
+<span class="sourceLineNo">097</span>      cancelled = true;<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    }<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    // Instead of executing `subscriber.onSubscribe` synchronously from within `Publisher.subscribe`<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    // we execute it asynchronously, this is to avoid executing the user code (`Iterable.iterator`) on the calling thread.<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    // It also makes it easier to follow rule 1.9<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    private void doSubscribe() {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>      try {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        iterator = elements.iterator();<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        if (iterator == null)<a name="line.106"></a>
+<span class="sourceLineNo">107</span>          iterator = Collections.&lt;T&gt;emptyList().iterator(); // So we can assume that `iterator` is never null<a name="line.107"></a>
+<span class="sourceLineNo">108</span>      } catch(final Throwable t) {<a name="line.108"></a>
+<span class="sourceLineNo">109</span>        subscriber.onSubscribe(new Subscription() { // We need to make sure we signal onSubscribe before onError, obeying rule 1.9<a name="line.109"></a>
+<span class="sourceLineNo">110</span>          @Override public void cancel() {}<a name="line.110"></a>
+<span class="sourceLineNo">111</span>          @Override public void request(long n) {}<a name="line.111"></a>
+<span class="sourceLineNo">112</span>        });<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        terminateDueTo(t); // Here we send onError, obeying rule 1.09<a name="line.113"></a>
+<span class="sourceLineNo">114</span>      }<a name="line.114"></a>
+<span class="sourceLineNo">115</span><a name="line.115"></a>
+<span class="sourceLineNo">116</span>      if (!cancelled) {<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        // Deal with setting up the subscription with the subscriber<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        try {<a name="line.118"></a>
+<span class="sourceLineNo">119</span>          subscriber.onSubscribe(this);<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        } catch(final Throwable t) { // Due diligence to obey 2.13<a name="line.120"></a>
+<span class="sourceLineNo">121</span>          terminateDueTo(new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onSubscribe.", t));<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        }<a name="line.122"></a>
+<span class="sourceLineNo">123</span><a name="line.123"></a>
+<span class="sourceLineNo">124</span>        // Deal with already complete iterators promptly<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        boolean hasElements = false;<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        try {<a name="line.126"></a>
+<span class="sourceLineNo">127</span>          hasElements = iterator.hasNext();<a name="line.127"></a>
+<span class="sourceLineNo">128</span>        } catch(final Throwable t) {<a name="line.128"></a>
+<span class="sourceLineNo">129</span>          terminateDueTo(t); // If hasNext throws, there's something wrong and we need to signal onError as per 1.2, 1.4, <a name="line.129"></a>
+<span class="sourceLineNo">130</span>        }<a name="line.130"></a>
+<span class="sourceLineNo">131</span><a name="line.131"></a>
+<span class="sourceLineNo">132</span>        // If we don't have anything to deliver, we're already done, so lets do the right thing and<a name="line.132"></a>
+<span class="sourceLineNo">133</span>        // not wait for demand to deliver `onComplete` as per rule 1.2 and 1.3<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        if (!hasElements) {<a name="line.134"></a>
+<span class="sourceLineNo">135</span>          try {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>            doCancel(); // Rule 1.6 says we need to consider the `Subscription` cancelled when `onComplete` is signalled<a name="line.136"></a>
+<span class="sourceLineNo">137</span>            subscriber.onComplete();<a name="line.137"></a>
+<span class="sourceLineNo">138</span>          } catch(final Throwable t) { // As per rule 2.13, `onComplete` is not allowed to throw exceptions, so we do what we can, and log this.<a name="line.138"></a>
+<span class="sourceLineNo">139</span>            (new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onComplete.", t)).printStackTrace(System.err);<a name="line.139"></a>
+<span class="sourceLineNo">140</span>          }<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        }<a name="line.141"></a>
+<span class="sourceLineNo">142</span>      }<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    }<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>    // This is our behavior for producing elements downstream<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    private void doSend() {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>      try {<a name="line.147"></a>
+<span class="sourceLineNo">148</span>        // In order to play nice with the `Executor` we will only send at-most `batchSize` before<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        // rescheduing ourselves and relinquishing the current thread.<a name="line.149"></a>
+<span class="sourceLineNo">150</span>        int leftInBatch = batchSize;<a name="line.150"></a>
+<span class="sourceLineNo">151</span>        do {<a name="line.151"></a>
+<span class="sourceLineNo">152</span>          T next;<a name="line.152"></a>
+<span class="sourceLineNo">153</span>          boolean hasNext;<a name="line.153"></a>
+<span class="sourceLineNo">154</span>          try {<a name="line.154"></a>
+<span class="sourceLineNo">155</span>            next = iterator.next(); // We have already checked `hasNext` when subscribing, so we can fall back to testing -after- `next` is called.<a name="line.155"></a>
+<span class="sourceLineNo">156</span>            hasNext = iterator.hasNext(); // Need to keep track of End-of-Stream<a name="line.156"></a>
+<span class="sourceLineNo">157</span>          } catch (final Throwable t) {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>            terminateDueTo(t); // If `next` or `hasNext` throws (they can, since it is user-provided), we need to treat the stream as errored as per rule 1.4<a name="line.158"></a>
+<span class="sourceLineNo">159</span>            return;<a name="line.159"></a>
+<span class="sourceLineNo">160</span>          }<a name="line.160"></a>
+<span class="sourceLineNo">161</span>          subscriber.onNext(next); // Then we signal the next element downstream to the `Subscriber`<a name="line.161"></a>
+<span class="sourceLineNo">162</span>          if (!hasNext) { // If we are at End-of-Stream<a name="line.162"></a>
+<span class="sourceLineNo">163</span>            doCancel(); // We need to consider this `Subscription` as cancelled as per rule 1.6<a name="line.163"></a>
+<span class="sourceLineNo">164</span>            subscriber.onComplete(); // Then we signal `onComplete` as per rule 1.2 and 1.5<a name="line.164"></a>
+<span class="sourceLineNo">165</span>          }<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        } while (!cancelled           // This makes sure that rule 1.8 is upheld, i.e. we need to stop signalling "eventually"<a name="line.166"></a>
+<span class="sourceLineNo">167</span>                 &amp;&amp; --leftInBatch &gt; 0 // This makes sure that we only send `batchSize` number of elements in one go (so we can yield to other Runnables)<a name="line.167"></a>
+<span class="sourceLineNo">168</span>                 &amp;&amp; --demand &gt; 0);    // This makes sure that rule 1.1 is upheld (sending more than was demanded)<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>        if (!cancelled &amp;&amp; demand &gt; 0) // If the `Subscription` is still alive and well, and we have demand to satisfy, we signal ourselves to send more data<a name="line.170"></a>
+<span class="sourceLineNo">171</span>          signal(Send.Instance);<a name="line.171"></a>
+<span class="sourceLineNo">172</span>      } catch(final Throwable t) {<a name="line.172"></a>
+<span class="sourceLineNo">173</span>        // We can only get here if `onNext` or `onComplete` threw, and they are not allowed to according to 2.13, so we can only cancel and log here.<a name="line.173"></a>
+<span class="sourceLineNo">174</span>        doCancel(); // Make sure that we are cancelled, since we cannot do anything else since the `Subscriber` is faulty.<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        (new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onNext or onComplete.", t)).printStackTrace(System.err);<a name="line.175"></a>
+<span class="sourceLineNo">176</span>      }<a name="line.176"></a>
+<span class="sourceLineNo">177</span>    }<a name="line.177"></a>
+<span class="sourceLineNo">178</span><a name="line.178"></a>
+<span class="sourceLineNo">179</span>    // This is a helper method to ensure that we always `cancel` when we signal `onError` as per rule 1.6<a name="line.179"></a>
+<span class="sourceLineNo">180</span>    private void terminateDueTo(final Throwable t) {<a name="line.180"></a>
+<span class="sourceLineNo">181</span>      cancelled = true; // When we signal onError, the subscription must be considered as cancelled, as per rule 1.6<a name="line.181"></a>
+<span class="sourceLineNo">182</span>      try {<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        subscriber.onError(t); // Then we signal the error downstream, to the `Subscriber`<a name="line.183"></a>
+<span class="sourceLineNo">184</span>      } catch(final Throwable t2) { // If `onError` throws an exception, this is a spec violation according to rule 1.9, and all we can do is to log it.<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        (new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onError.", t2)).printStackTrace(System.err);<a name="line.185"></a>
+<span class="sourceLineNo">186</span>      }<a name="line.186"></a>
+<span class="sourceLineNo">187</span>    }<a name="line.187"></a>
+<span class="sourceLineNo">188</span><a name="line.188"></a>
+<span class="sourceLineNo">189</span>    // What `signal` does is that it sends signals to the `Subscription` asynchronously<a name="line.189"></a>
+<span class="sourceLineNo">190</span>    private void signal(final Signal signal) {<a name="line.190"></a>
+<span class="sourceLineNo">191</span>      if (inboundSignals.offer(signal)) // No need to null-check here as ConcurrentLinkedQueue does this for us<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        tryScheduleToExecute(); // Then we try to schedule it for execution, if it isn't already<a name="line.192"></a>
+<span class="sourceLineNo">193</span>    }<a name="line.193"></a>
+<span class="sourceLineNo">194</span><a name="line.194"></a>
+<span class="sourceLineNo">195</span>    // This is the main "event loop" if you so will<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    @Override public final void run() {<a name="line.196"></a>
+<span class="sourceLineNo">197</span>      if(on.get()) { // establishes a happens-before relationship with the end of the previous run<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        try {<a name="line.198"></a>
+<span class="sourceLineNo">199</span>          final Signal s = inboundSignals.poll(); // We take a signal off the queue<a name="line.199"></a>
+<span class="sourceLineNo">200</span>          if (!cancelled) { // to make sure that we follow rule 1.8, 3.6 and 3.7<a name="line.200"></a>
+<span class="sourceLineNo">201</span><a name="line.201"></a>
+<span class="sourceLineNo">202</span>            // Below we simply unpack the `Signal`s and invoke the corresponding methods<a name="line.202"></a>
+<span class="sourceLineNo">203</span>            if (s instanceof Request)<a name="line.203"></a>
+<span class="sourceLineNo">204</span>              doRequest(((Request)s).n);<a name="line.204"></a>
+<span class="sourceLineNo">205</span>            else if (s == Send.Instance)<a name="line.205"></a>
+<span class="sourceLineNo">206</span>              doSend();<a name="line.206"></a>
+<span class="sourceLineNo">207</span>            else if (s == Cancel.Instance)<a name="line.207"></a>
+<span class="sourceLineNo">208</span>              doCancel();<a name="line.208"></a>
+<span class="sourceLineNo">209</span>            else if (s == Subscribe.Instance)<a name="line.209"></a>
+<span class="sourceLineNo">210</span>              doSubscribe();<a name="line.210"></a>
+<span class="sourceLineNo">211</span>          }<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        } finally {<a name="line.212"></a>
+<span class="sourceLineNo">213</span>          on.set(false); // establishes a happens-before relationship with the beginning of the next run<a name="line.213"></a>
+<span class="sourceLineNo">214</span>          if(!inboundSignals.isEmpty()) // If we still have signals to process<a name="line.214"></a>
+<span class="sourceLineNo">215</span>            tryScheduleToExecute(); // Then we try to schedule ourselves to execute again<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        }<a name="line.216"></a>
+<span class="sourceLineNo">217</span>      }<a name="line.217"></a>
+<span class="sourceLineNo">218</span>    }<a name="line.218"></a>
+<span class="sourceLineNo">219</span><a name="line.219"></a>
+<span class="sourceLineNo">220</span>    // This method makes sure that this `Subscription` is only running on one Thread at a time,<a name="line.220"></a>
+<span class="sourceLineNo">221</span>    // this is important to make sure that we follow rule 1.3<a name="line.221"></a>
+<span class="sourceLineNo">222</span>    private final void tryScheduleToExecute() {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>      if(on.compareAndSet(false, true)) {<a name="line.223"></a>
+<span class="sourceLineNo">224</span>        try {<a name="line.224"></a>
+<span class="sourceLineNo">225</span>          executor.execute(this);<a name="line.225"></a>
+<span class="sourceLineNo">226</span>        } catch(Throwable t) { // If we can't run on the `Executor`, we need to fail gracefully<a name="line.226"></a>
+<span class="sourceLineNo">227</span>          if (!cancelled) {<a name="line.227"></a>
+<span class="sourceLineNo">228</span>            doCancel(); // First of all, this failure is not recoverable, so we need to follow rule 1.4 and 1.6<a name="line.228"></a>
+<span class="sourceLineNo">229</span>            try {<a name="line.229"></a>
+<span class="sourceLineNo">230</span>              terminateDueTo(new IllegalStateException("Publisher terminated due to unavailable Executor.", t));<a name="line.230"></a>
+<span class="sourceLineNo">231</span>            } finally {<a name="line.231"></a>
+<span class="sourceLineNo">232</span>              inboundSignals.clear(); // We're not going to need these anymore<a name="line.232"></a>
+<span class="sourceLineNo">233</span>              // This subscription is cancelled by now, but letting it become schedulable again means<a name="line.233"></a>
+<span class="sourceLineNo">234</span>              // that we can drain the inboundSignals queue if anything arrives after clearing<a name="line.234"></a>
+<span class="sourceLineNo">235</span>              on.set(false);<a name="line.235"></a>
+<span class="sourceLineNo">236</span>            }<a name="line.236"></a>
+<span class="sourceLineNo">237</span>          }<a name="line.237"></a>
+<span class="sourceLineNo">238</span>        }<a name="line.238"></a>
+<span class="sourceLineNo">239</span>      }<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    }<a name="line.240"></a>
+<span class="sourceLineNo">241</span><a name="line.241"></a>
+<span class="sourceLineNo">242</span>    // Our implementation of `Subscription.request` sends a signal to the Subscription that more elements are in demand<a name="line.242"></a>
+<span class="sourceLineNo">243</span>    @Override public void request(final long n) {<a name="line.243"></a>
+<span class="sourceLineNo">244</span>      signal(new Request(n));<a name="line.244"></a>
+<span class="sourceLineNo">245</span>    }<a name="line.245"></a>
+<span class="sourceLineNo">246</span>    // Our implementation of `Subscription.cancel` sends a signal to the Subscription that the `Subscriber` is not interested in any more elements<a name="line.246"></a>
+<span class="sourceLineNo">247</span>    @Override public void cancel() {<a name="line.247"></a>
+<span class="sourceLineNo">248</span>      signal(Cancel.Instance);<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    }<a name="line.249"></a>
+<span class="sourceLineNo">250</span>    // The reason for the `init` method is that we want to ensure the `SubscriptionImpl`<a name="line.250"></a>
+<span class="sourceLineNo">251</span>    // is completely constructed before it is exposed to the thread pool, therefor this<a name="line.251"></a>
+<span class="sourceLineNo">252</span>    // method is only intended to be invoked once, and immediately after the constructor has<a name="line.252"></a>
+<span class="sourceLineNo">253</span>    // finished.<a name="line.253"></a>
+<span class="sourceLineNo">254</span>    void init() {<a name="line.254"></a>
+<span class="sourceLineNo">255</span>      signal(Subscribe.Instance);<a name="line.255"></a>
+<span class="sourceLineNo">256</span>    }<a name="line.256"></a>
+<span class="sourceLineNo">257</span>  };<a name="line.257"></a>
+<span class="sourceLineNo">258</span>}<a name="line.258"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
