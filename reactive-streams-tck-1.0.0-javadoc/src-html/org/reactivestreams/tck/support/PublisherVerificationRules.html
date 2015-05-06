@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="sv">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.reactivestreams.tck.support;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span><a name="line.3"></a>
+<span class="sourceLineNo">004</span>/**<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Internal TCK use only.<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * Add / Remove tests for PublisherVerification here to make sure that they arre added/removed in the other places.<a name="line.6"></a>
+<span class="sourceLineNo">007</span> */<a name="line.7"></a>
+<span class="sourceLineNo">008</span>public interface PublisherVerificationRules {<a name="line.8"></a>
+<span class="sourceLineNo">009</span>  void required_validate_maxElementsFromPublisher() throws Exception;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>  void required_validate_boundedDepthOfOnNextAndRequestRecursion() throws Exception;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>  void required_createPublisher1MustProduceAStreamOfExactly1Element() throws Throwable;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>  void required_createPublisher3MustProduceAStreamOfExactly3Elements() throws Throwable;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>  void required_spec101_subscriptionRequestMustResultInTheCorrectNumberOfProducedElements() throws Throwable;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>  void required_spec102_maySignalLessThanRequestedAndTerminateSubscription() throws Throwable;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>  void stochastic_spec103_mustSignalOnMethodsSequentially() throws Throwable;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>  void optional_spec104_mustSignalOnErrorWhenFails() throws Throwable;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>  void required_spec105_mustSignalOnCompleteWhenFiniteStreamTerminates() throws Throwable;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>  void optional_spec105_emptyStreamMustTerminateBySignallingOnComplete() throws Throwable;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>  void untested_spec106_mustConsiderSubscriptionCancelledAfterOnErrorOrOnCompleteHasBeenCalled() throws Throwable;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>  void required_spec107_mustNotEmitFurtherSignalsOnceOnCompleteHasBeenSignalled() throws Throwable;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>  void untested_spec107_mustNotEmitFurtherSignalsOnceOnErrorHasBeenSignalled() throws Throwable;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>  void untested_spec108_possiblyCanceledSubscriptionShouldNotReceiveOnErrorOrOnCompleteSignals() throws Throwable;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>  void required_spec109_mustIssueOnSubscribeForNonNullSubscriber() throws Throwable;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>  void untested_spec109_subscribeShouldNotThrowNonFatalThrowable() throws Throwable;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>  void required_spec109_subscribeThrowNPEOnNullSubscriber() throws Throwable;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>  void required_spec109_mayRejectCallsToSubscribeIfPublisherIsUnableOrUnwillingToServeThemRejectionMustTriggerOnErrorAfterOnSubscribe() throws Throwable;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>  void untested_spec110_rejectASubscriptionRequestIfTheSameSubscriberSubscribesTwice() throws Throwable;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>  void optional_spec111_maySupportMultiSubscribe() throws Throwable;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>  void optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingOneByOne() throws Throwable;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>  void optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfront() throws Throwable;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>  void optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfrontAndCompleteAsExpected() throws Throwable;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>  void required_spec302_mustAllowSynchronousRequestCallsFromOnNextAndOnSubscribe() throws Throwable;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>  void required_spec303_mustNotAllowUnboundedRecursion() throws Throwable;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>  void untested_spec304_requestShouldNotPerformHeavyComputations() throws Exception;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>  void untested_spec305_cancelMustNotSynchronouslyPerformHeavyCompuatation() throws Exception;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>  void required_spec306_afterSubscriptionIsCancelledRequestMustBeNops() throws Throwable;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>  void required_spec307_afterSubscriptionIsCancelledAdditionalCancelationsMustBeNops() throws Throwable;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>  void required_spec309_requestZeroMustSignalIllegalArgumentException() throws Throwable;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>  void required_spec309_requestNegativeNumberMustSignalIllegalArgumentException() throws Throwable;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>  void required_spec312_cancelMustMakeThePublisherToEventuallyStopSignaling() throws Throwable;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>  void required_spec313_cancelMustMakeThePublisherEventuallyDropAllReferencesToTheSubscriber() throws Throwable;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>  void required_spec317_mustSupportAPendingElementCountUpToLongMaxValue() throws Throwable;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>  void required_spec317_mustSupportACumulativePendingElementCountUpToLongMaxValue() throws Throwable;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>  void required_spec317_mustNotSignalOnErrorWhenPendingAboveLongMaxValue() throws Throwable;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>}<a name="line.45"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

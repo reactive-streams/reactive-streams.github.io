@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="sv">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.reactivestreams.example.unicast;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.reactivestreams.Subscriber;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.reactivestreams.Subscription;<a name="line.4"></a>
+<span class="sourceLineNo">005</span><a name="line.5"></a>
+<span class="sourceLineNo">006</span>/**<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * SyncSubscriber is an implementation of Reactive Streams `Subscriber`,<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * it runs synchronously (on the Publisher's thread) and requests one element<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * at a time and invokes a user-defined method to process each element.<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * NOTE: The code below uses a lot of try-catches to show the reader where exceptions can be expected, and where they are forbidden.<a name="line.11"></a>
+<span class="sourceLineNo">012</span> */<a name="line.12"></a>
+<span class="sourceLineNo">013</span>public abstract class SyncSubscriber&lt;T&gt; implements Subscriber&lt;T&gt; {<a name="line.13"></a>
+<span class="sourceLineNo">014</span>  private Subscription subscription; // Obeying rule 3.1, we make this private!<a name="line.14"></a>
+<span class="sourceLineNo">015</span>  private boolean done = false;<a name="line.15"></a>
+<span class="sourceLineNo">016</span><a name="line.16"></a>
+<span class="sourceLineNo">017</span>  @Override public void onSubscribe(final Subscription s) {<a name="line.17"></a>
+<span class="sourceLineNo">018</span>    // As per rule 2.13, we need to throw a `java.lang.NullPointerException` if the `Subscription` is `null`<a name="line.18"></a>
+<span class="sourceLineNo">019</span>    if (s == null) throw null;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>    if (subscription != null) { // If someone has made a mistake and added this Subscriber multiple times, let's handle it gracefully<a name="line.21"></a>
+<span class="sourceLineNo">022</span>      try {<a name="line.22"></a>
+<span class="sourceLineNo">023</span>        s.cancel(); // Cancel the additional subscription<a name="line.23"></a>
+<span class="sourceLineNo">024</span>      } catch(final Throwable t) {<a name="line.24"></a>
+<span class="sourceLineNo">025</span>        //Subscription.cancel is not allowed to throw an exception, according to rule 3.15<a name="line.25"></a>
+<span class="sourceLineNo">026</span>        (new IllegalStateException(s + " violated the Reactive Streams rule 3.15 by throwing an exception from cancel.", t)).printStackTrace(System.err);<a name="line.26"></a>
+<span class="sourceLineNo">027</span>      }<a name="line.27"></a>
+<span class="sourceLineNo">028</span>    } else {<a name="line.28"></a>
+<span class="sourceLineNo">029</span>      // We have to assign it locally before we use it, if we want to be a synchronous `Subscriber`<a name="line.29"></a>
+<span class="sourceLineNo">030</span>      // Because according to rule 3.10, the Subscription is allowed to call `onNext` synchronously from within `request`<a name="line.30"></a>
+<span class="sourceLineNo">031</span>      subscription = s;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>      try {<a name="line.32"></a>
+<span class="sourceLineNo">033</span>        // If we want elements, according to rule 2.1 we need to call `request`<a name="line.33"></a>
+<span class="sourceLineNo">034</span>        // And, according to rule 3.2 we are allowed to call this synchronously from within the `onSubscribe` method<a name="line.34"></a>
+<span class="sourceLineNo">035</span>        s.request(1); // Our Subscriber is unbuffered and modest, it requests one element at a time<a name="line.35"></a>
+<span class="sourceLineNo">036</span>      } catch(final Throwable t) {<a name="line.36"></a>
+<span class="sourceLineNo">037</span>        // Subscription.request is not allowed to throw according to rule 3.16<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        (new IllegalStateException(s + " violated the Reactive Streams rule 3.16 by throwing an exception from request.", t)).printStackTrace(System.err);<a name="line.38"></a>
+<span class="sourceLineNo">039</span>      }<a name="line.39"></a>
+<span class="sourceLineNo">040</span>    }<a name="line.40"></a>
+<span class="sourceLineNo">041</span>  }<a name="line.41"></a>
+<span class="sourceLineNo">042</span><a name="line.42"></a>
+<span class="sourceLineNo">043</span>  @Override public void onNext(final T element) {<a name="line.43"></a>
+<span class="sourceLineNo">044</span>    if (subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec<a name="line.44"></a>
+<span class="sourceLineNo">045</span>      (new IllegalStateException("Publisher violated the Reactive Streams rule 1.09 signalling onNext prior to onSubscribe.")).printStackTrace(System.err);<a name="line.45"></a>
+<span class="sourceLineNo">046</span>    } else {<a name="line.46"></a>
+<span class="sourceLineNo">047</span>      // As per rule 2.13, we need to throw a `java.lang.NullPointerException` if the `element` is `null`<a name="line.47"></a>
+<span class="sourceLineNo">048</span>      if (element == null) throw null;<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>      if (!done) { // If we aren't already done<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        try {<a name="line.51"></a>
+<span class="sourceLineNo">052</span>          if (foreach(element)) {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>            try {<a name="line.53"></a>
+<span class="sourceLineNo">054</span>              subscription.request(1); // Our Subscriber is unbuffered and modest, it requests one element at a time<a name="line.54"></a>
+<span class="sourceLineNo">055</span>            } catch (final Throwable t) {<a name="line.55"></a>
+<span class="sourceLineNo">056</span>              // Subscription.request is not allowed to throw according to rule 3.16<a name="line.56"></a>
+<span class="sourceLineNo">057</span>              (new IllegalStateException(subscription + " violated the Reactive Streams rule 3.16 by throwing an exception from request.", t)).printStackTrace(System.err);<a name="line.57"></a>
+<span class="sourceLineNo">058</span>            }<a name="line.58"></a>
+<span class="sourceLineNo">059</span>          } else {<a name="line.59"></a>
+<span class="sourceLineNo">060</span>            done();<a name="line.60"></a>
+<span class="sourceLineNo">061</span>          }<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        } catch (final Throwable t) {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>          done();<a name="line.63"></a>
+<span class="sourceLineNo">064</span>          try {<a name="line.64"></a>
+<span class="sourceLineNo">065</span>            onError(t);<a name="line.65"></a>
+<span class="sourceLineNo">066</span>          } catch (final Throwable t2) {<a name="line.66"></a>
+<span class="sourceLineNo">067</span>            //Subscriber.onError is not allowed to throw an exception, according to rule 2.13<a name="line.67"></a>
+<span class="sourceLineNo">068</span>            (new IllegalStateException(this + " violated the Reactive Streams rule 2.13 by throwing an exception from onError.", t2)).printStackTrace(System.err);<a name="line.68"></a>
+<span class="sourceLineNo">069</span>          }<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        }<a name="line.70"></a>
+<span class="sourceLineNo">071</span>      }<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
+<span class="sourceLineNo">073</span>  }<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>  // Showcases a convenience method to idempotently marking the Subscriber as "done", so we don't want to process more elements<a name="line.75"></a>
+<span class="sourceLineNo">076</span>  // herefor we also need to cancel our `Subscription`.<a name="line.76"></a>
+<span class="sourceLineNo">077</span>  private void done() {<a name="line.77"></a>
+<span class="sourceLineNo">078</span>    //On this line we could add a guard against `!done`, but since rule 3.7 says that `Subscription.cancel()` is idempotent, we don't need to.<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    done = true; // If we `foreach` throws an exception, let's consider ourselves done (not accepting more elements)<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    try {<a name="line.80"></a>
+<span class="sourceLineNo">081</span>      subscription.cancel(); // Cancel the subscription<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    } catch(final Throwable t) {<a name="line.82"></a>
+<span class="sourceLineNo">083</span>      //Subscription.cancel is not allowed to throw an exception, according to rule 3.15<a name="line.83"></a>
+<span class="sourceLineNo">084</span>      (new IllegalStateException(subscription + " violated the Reactive Streams rule 3.15 by throwing an exception from cancel.", t)).printStackTrace(System.err);<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    }<a name="line.85"></a>
+<span class="sourceLineNo">086</span>  }<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>  // This method is left as an exercise to the reader/extension point<a name="line.88"></a>
+<span class="sourceLineNo">089</span>  // Returns whether more elements are desired or not, and if no more elements are desired<a name="line.89"></a>
+<span class="sourceLineNo">090</span>  protected abstract boolean foreach(final T element);<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>  @Override public void onError(final Throwable t) {<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    if (subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec<a name="line.93"></a>
+<span class="sourceLineNo">094</span>      (new IllegalStateException("Publisher violated the Reactive Streams rule 1.09 signalling onError prior to onSubscribe.")).printStackTrace(System.err);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    } else {<a name="line.95"></a>
+<span class="sourceLineNo">096</span>      // As per rule 2.13, we need to throw a `java.lang.NullPointerException` if the `Throwable` is `null`<a name="line.96"></a>
+<span class="sourceLineNo">097</span>      if (t == null) throw null;<a name="line.97"></a>
+<span class="sourceLineNo">098</span>      // Here we are not allowed to call any methods on the `Subscription` or the `Publisher`, as per rule 2.3<a name="line.98"></a>
+<span class="sourceLineNo">099</span>      // And anyway, the `Subscription` is considered to be cancelled if this method gets called, as per rule 2.4<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    }<a name="line.100"></a>
+<span class="sourceLineNo">101</span>  }<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>  @Override public void onComplete() {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    if (subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec<a name="line.104"></a>
+<span class="sourceLineNo">105</span>      (new IllegalStateException("Publisher violated the Reactive Streams rule 1.09 signalling onComplete prior to onSubscribe.")).printStackTrace(System.err);<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    } else {<a name="line.106"></a>
+<span class="sourceLineNo">107</span>      // Here we are not allowed to call any methods on the `Subscription` or the `Publisher`, as per rule 2.3<a name="line.107"></a>
+<span class="sourceLineNo">108</span>      // And anyway, the `Subscription` is considered to be cancelled if this method gets called, as per rule 2.4<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    }<a name="line.109"></a>
+<span class="sourceLineNo">110</span>  }<a name="line.110"></a>
+<span class="sourceLineNo">111</span>}<a name="line.111"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
