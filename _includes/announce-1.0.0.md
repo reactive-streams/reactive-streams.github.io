@@ -49,8 +49,8 @@ We are also proud to let _Reactive Streams_ `1.0.0` be announced to the world ac
    * See [github.com/ReactiveX/RxJavaReactiveStreams](https://github.com/ReactiveX/RxJavaReactiveStreams).
 * [Slick](http://slick.typesafe.com/) *(version `3.0.0`)*
    * See the [“Streaming”](http://slick.typesafe.com/doc/3.0.0/dbio.html#streaming) section of the manual.
-* [Vert.x 3.0](http://vertx.io) *(version `milestone-5a`)*
-   * Vert.x 3.0 is currently in alpha. The Reactive Streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
+* [Vert.x 3.0](http://vert-x3.github.io/) *(version `milestone-5a`)*
+   * Vert.x 3.0 is currently in beta. The Reactive Streams implementation can be found [here](https://github.com/vert-x3/vertx-reactive-streams).
    
 Credits
 -------
