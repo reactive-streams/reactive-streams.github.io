@@ -37,6 +37,8 @@ We are also proud to let _Reactive Streams_ `1.0.0` be announced to the world ac
 
 * [Akka](http://akka.io/) Streams *(version `1.0-RC2`)*
    * See this [Activator template](http://www.typesafe.com/activator/template/akka-stream-scala) and the [documentation](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-RC2/index.html).
+* [lettuce](http://redis.paluch.biz) *(version `5.0.0`)*
+   * For the documentation see [here](https://github.com/mp911de/lettuce/wiki/Reactive-API-%285.0%29).
 * [MongoDB](http://mongodb.org) *(version `1.0.0`)*
    * For the documentation see [here](http://mongodb.github.io/mongo-java-driver-reactivestreams).
 * [Ratpack](http://www.ratpack.io) *(version `0.9.16`)*
