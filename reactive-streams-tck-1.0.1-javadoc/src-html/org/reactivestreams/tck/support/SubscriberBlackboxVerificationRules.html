@@ -1,0 +1,455 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="sv">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/************************************************************************<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed under Public Domain (CC0)                                    *<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *                                                                       *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * To the extent possible under law, the person who associated CC0 with  *<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * this code has waived all copyright and related or neighboring         *<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * rights to this code.                                                  *<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *                                                                       *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * You should have received a copy of the CC0 legalcode along with this  *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * work. If not, see &lt;http://creativecommons.org/publicdomain/zero/1.0/&gt;.*<a name="line.9"></a>
+<span class="sourceLineNo">010</span> ************************************************************************/<a name="line.10"></a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span>package org.reactivestreams.tck.support;<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.reactivestreams.tck.SubscriberBlackboxVerification;<a name="line.14"></a>
+<span class="sourceLineNo">015</span><a name="line.15"></a>
+<span class="sourceLineNo">016</span>/**<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Internal TCK use only.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * Add / Remove tests for SubscriberBlackboxVerification here to make sure that they arre added/removed in the other places.<a name="line.18"></a>
+<span class="sourceLineNo">019</span> */<a name="line.19"></a>
+<span class="sourceLineNo">020</span>public interface SubscriberBlackboxVerificationRules {<a name="line.20"></a>
+<span class="sourceLineNo">021</span>  /**<a name="line.21"></a>
+<span class="sourceLineNo">022</span>   * Asks for a {@code Subscriber} instance, expects it to call {@code request()} in <a name="line.22"></a>
+<span class="sourceLineNo">023</span>   * a timely manner and signals as many {@code onNext} items as the very first request <a name="line.23"></a>
+<span class="sourceLineNo">024</span>   * amount specified by the {@code Subscriber}.<a name="line.24"></a>
+<span class="sourceLineNo">025</span>   * &lt;p&gt;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.1'&gt;2.1&lt;/a&gt;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>   * &lt;p&gt;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>   * Notes:<a name="line.28"></a>
+<span class="sourceLineNo">029</span>   * &lt;ul&gt;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>   * &lt;li&gt;This test emits the number of items requested thus the {@code Subscriber} implementation<a name="line.30"></a>
+<span class="sourceLineNo">031</span>   * should not request too much.&lt;/li&gt;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>   * &lt;li&gt;Only the very first {@code request} amount is considered.&lt;/li&gt;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>   * &lt;li&gt;This test doesn't signal {@code onComplete} after the first set of {@code onNext} signals<a name="line.33"></a>
+<span class="sourceLineNo">034</span>   * has been emitted and may cause resource leak in<a name="line.34"></a>
+<span class="sourceLineNo">035</span>   * {@code Subscriber}s that expect a finite {@code Publisher}.&lt;/li&gt;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>   * &lt;li&gt;The test ignores cancellation from the {@code Subscriber} and emits the requested amount regardless.&lt;/li&gt;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>   * &lt;/ul&gt;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>   * &lt;p&gt;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.39"></a>
+<span class="sourceLineNo">040</span>   * &lt;ul&gt;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>   * &lt;li&gt;if the {@code Subscriber} requires external stimulus to begin requesting; override the<a name="line.41"></a>
+<span class="sourceLineNo">042</span>   * {@link SubscriberBlackboxVerification#triggerRequest(org.reactivestreams.Subscriber)} method<a name="line.42"></a>
+<span class="sourceLineNo">043</span>   *  in this case,&lt;/li&gt;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Subscriber} has some time-delay behavior,&lt;/li&gt;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>   * &lt;li&gt;if the {@code Subscriber} requests zero or a negative value in some circumstances,&lt;/li&gt;<a name="line.45"></a>
+<span class="sourceLineNo">046</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.46"></a>
+<span class="sourceLineNo">047</span>   * {@code onNext} methods.<a name="line.47"></a>
+<span class="sourceLineNo">048</span>   * &lt;/ul&gt;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>   */<a name="line.49"></a>
+<span class="sourceLineNo">050</span>  void required_spec201_blackbox_mustSignalDemandViaSubscriptionRequest() throws Throwable;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>  /**<a name="line.51"></a>
+<span class="sourceLineNo">052</span>   * Currently, this test is skipped because there is no agreed upon approach how <a name="line.52"></a>
+<span class="sourceLineNo">053</span>   * to detect if the {@code Subscriber} really goes async or just responds in<a name="line.53"></a>
+<span class="sourceLineNo">054</span>   * a timely manner.<a name="line.54"></a>
+<span class="sourceLineNo">055</span>   * &lt;p&gt;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.2'&gt;2.2&lt;/a&gt;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>   */<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  void untested_spec202_blackbox_shouldAsynchronouslyDispatch() throws Exception;<a name="line.58"></a>
+<span class="sourceLineNo">059</span>  /**<a name="line.59"></a>
+<span class="sourceLineNo">060</span>   * Asks for a {@code Subscriber}, signals an {@code onSubscribe} followed by an {@code onComplete} synchronously,<a name="line.60"></a>
+<span class="sourceLineNo">061</span>   * and checks if neither {@code request} nor {@code cancel} was called from within the {@code Subscriber}'s<a name="line.61"></a>
+<span class="sourceLineNo">062</span>   * {@code onComplete} implementation.<a name="line.62"></a>
+<span class="sourceLineNo">063</span>   * &lt;p&gt;<a name="line.63"></a>
+<span class="sourceLineNo">064</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.3'&gt;2.3&lt;/a&gt;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>   * &lt;p&gt;<a name="line.65"></a>
+<span class="sourceLineNo">066</span>   * Notes:<a name="line.66"></a>
+<span class="sourceLineNo">067</span>   * &lt;ul&gt;<a name="line.67"></a>
+<span class="sourceLineNo">068</span>   * &lt;li&gt;The test checks for the presensce of method named "onComplete" in the current stacktrace when handling<a name="line.68"></a>
+<span class="sourceLineNo">069</span>   * the {@code request} or {@code cancel} calls in the test's own {@code Subscription}. <a name="line.69"></a>
+<span class="sourceLineNo">070</span>   * &lt;/ul&gt;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>   * &lt;p&gt;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.72"></a>
+<span class="sourceLineNo">073</span>   * &lt;ul&gt;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>   * &lt;li&gt;no calls happen to {@code request} or {@code cancel} in response to an {@code onComplete}<a name="line.74"></a>
+<span class="sourceLineNo">075</span>   * directly or indirectly,&lt;/li&gt;<a name="line.75"></a>
+<span class="sourceLineNo">076</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.76"></a>
+<span class="sourceLineNo">077</span>   * {@code onComplete} methods.<a name="line.77"></a>
+<span class="sourceLineNo">078</span>   * &lt;/ul&gt;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>   */<a name="line.79"></a>
+<span class="sourceLineNo">080</span>  void required_spec203_blackbox_mustNotCallMethodsOnSubscriptionOrPublisherInOnComplete() throws Throwable;<a name="line.80"></a>
+<span class="sourceLineNo">081</span>  /**<a name="line.81"></a>
+<span class="sourceLineNo">082</span>   * Asks for a {@code Subscriber}, signals an {@code onSubscribe} followed by an {@code onError} synchronously,<a name="line.82"></a>
+<span class="sourceLineNo">083</span>   * and checks if neither {@code request} nor {@code cancel} was called from within the {@code Subscriber}'s<a name="line.83"></a>
+<span class="sourceLineNo">084</span>   * {@code onComplete} implementation.<a name="line.84"></a>
+<span class="sourceLineNo">085</span>   * &lt;p&gt;<a name="line.85"></a>
+<span class="sourceLineNo">086</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.3'&gt;2.3&lt;/a&gt;<a name="line.86"></a>
+<span class="sourceLineNo">087</span>   * &lt;p&gt;<a name="line.87"></a>
+<span class="sourceLineNo">088</span>   * Notes:<a name="line.88"></a>
+<span class="sourceLineNo">089</span>   * &lt;ul&gt;<a name="line.89"></a>
+<span class="sourceLineNo">090</span>   * &lt;li&gt;The test checks for the presensce of method named "onError" in the current stacktrace when handling<a name="line.90"></a>
+<span class="sourceLineNo">091</span>   * the {@code request} or {@code cancel} calls in the test's own {@code Subscription}. <a name="line.91"></a>
+<span class="sourceLineNo">092</span>   * &lt;/ul&gt;<a name="line.92"></a>
+<span class="sourceLineNo">093</span>   * &lt;p&gt;<a name="line.93"></a>
+<span class="sourceLineNo">094</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.94"></a>
+<span class="sourceLineNo">095</span>   * &lt;ul&gt;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>   * &lt;li&gt;no calls happen to {@code request} or {@code cancel} in response to an {@code onError}<a name="line.96"></a>
+<span class="sourceLineNo">097</span>   * directly or indirectly,&lt;/li&gt;<a name="line.97"></a>
+<span class="sourceLineNo">098</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.98"></a>
+<span class="sourceLineNo">099</span>   * {@code onError} methods.<a name="line.99"></a>
+<span class="sourceLineNo">100</span>   * &lt;/ul&gt;<a name="line.100"></a>
+<span class="sourceLineNo">101</span>   */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>  void required_spec203_blackbox_mustNotCallMethodsOnSubscriptionOrPublisherInOnError() throws Throwable;<a name="line.102"></a>
+<span class="sourceLineNo">103</span>  /**<a name="line.103"></a>
+<span class="sourceLineNo">104</span>   * Currently, this test is skipped because there is no way to check what the {@code Subscriber} "considers"<a name="line.104"></a>
+<span class="sourceLineNo">105</span>   * since rule §2.3 forbids interaction from within the {@code onError} and {@code onComplete} methods.<a name="line.105"></a>
+<span class="sourceLineNo">106</span>   * &lt;p&gt;<a name="line.106"></a>
+<span class="sourceLineNo">107</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.4'&gt;2.4&lt;/a&gt;<a name="line.107"></a>
+<span class="sourceLineNo">108</span>   * &lt;p&gt;<a name="line.108"></a>
+<span class="sourceLineNo">109</span>   * Notes:<a name="line.109"></a>
+<span class="sourceLineNo">110</span>   * &lt;ul&gt;<a name="line.110"></a>
+<span class="sourceLineNo">111</span>   * &lt;li&gt;It would be possible to check if there was an async interaction with the test's {@code Subscription}<a name="line.111"></a>
+<span class="sourceLineNo">112</span>   * within a grace period but such check is still not generally decisive.&lt;/li&gt;<a name="line.112"></a>
+<span class="sourceLineNo">113</span>   * &lt;/ul&gt;<a name="line.113"></a>
+<span class="sourceLineNo">114</span>   */<a name="line.114"></a>
+<span class="sourceLineNo">115</span>  void untested_spec204_blackbox_mustConsiderTheSubscriptionAsCancelledInAfterRecievingOnCompleteOrOnError() throws Exception;<a name="line.115"></a>
+<span class="sourceLineNo">116</span>  /**<a name="line.116"></a>
+<span class="sourceLineNo">117</span>   * Asks for a {@code Subscriber}, signals {@code onSubscribe} twice synchronously and expects the second {@code Subscription} gets<a name="line.117"></a>
+<span class="sourceLineNo">118</span>   * cancelled in a timely manner and without any calls to its {@code request} method.<a name="line.118"></a>
+<span class="sourceLineNo">119</span>   * &lt;p&gt;<a name="line.119"></a>
+<span class="sourceLineNo">120</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.5'&gt;2.5&lt;/a&gt;<a name="line.120"></a>
+<span class="sourceLineNo">121</span>   * &lt;p&gt;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>   * Notes:<a name="line.122"></a>
+<span class="sourceLineNo">123</span>   * &lt;ul&gt;<a name="line.123"></a>
+<span class="sourceLineNo">124</span>   * &lt;li&gt;The test doesn't signal any other events than {@code onSubscribe} and may cause resource leak in<a name="line.124"></a>
+<span class="sourceLineNo">125</span>   * {@code Subscriber}s that expect a finite {@code Publisher}.<a name="line.125"></a>
+<span class="sourceLineNo">126</span>   * &lt;/ul&gt;<a name="line.126"></a>
+<span class="sourceLineNo">127</span>   * &lt;p&gt;<a name="line.127"></a>
+<span class="sourceLineNo">128</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.128"></a>
+<span class="sourceLineNo">129</span>   * &lt;ul&gt;<a name="line.129"></a>
+<span class="sourceLineNo">130</span>   * &lt;li&gt;if the {@code Subscribe.onSubscribe} implementation actually tries to detect multiple calls to it,&lt;/li&gt;<a name="line.130"></a>
+<span class="sourceLineNo">131</span>   * &lt;li&gt;if the second {@code Subscription} is cancelled asynchronously and that takes longer time than<a name="line.131"></a>
+<span class="sourceLineNo">132</span>   * the {@code TestEnvironment}'s timeout permits.&lt;/li&gt;<a name="line.132"></a>
+<span class="sourceLineNo">133</span>   * &lt;/ul&gt;<a name="line.133"></a>
+<span class="sourceLineNo">134</span>   */<a name="line.134"></a>
+<span class="sourceLineNo">135</span>  void required_spec205_blackbox_mustCallSubscriptionCancelIfItAlreadyHasAnSubscriptionAndReceivesAnotherOnSubscribeSignal() throws Exception;<a name="line.135"></a>
+<span class="sourceLineNo">136</span>  <a name="line.136"></a>
+<span class="sourceLineNo">137</span>  /**<a name="line.137"></a>
+<span class="sourceLineNo">138</span>   * Currently, this test is skipped because it requires more control over the {@code Subscriber} implementation<a name="line.138"></a>
+<span class="sourceLineNo">139</span>   * to make it cancel the {@code Subscription} for some external condition.<a name="line.139"></a>
+<span class="sourceLineNo">140</span>   * &lt;p&gt;<a name="line.140"></a>
+<span class="sourceLineNo">141</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.6'&gt;2.6&lt;/a&gt;<a name="line.141"></a>
+<span class="sourceLineNo">142</span>   */<a name="line.142"></a>
+<span class="sourceLineNo">143</span>  void untested_spec206_blackbox_mustCallSubscriptionCancelIfItIsNoLongerValid() throws Exception;<a name="line.143"></a>
+<span class="sourceLineNo">144</span>  /**<a name="line.144"></a>
+<span class="sourceLineNo">145</span>   * Currently, this test is skipped because it requires more control over the {@code Subscriber} implementation<a name="line.145"></a>
+<span class="sourceLineNo">146</span>   * to issue requests based on external stimulus.<a name="line.146"></a>
+<span class="sourceLineNo">147</span>   * &lt;p&gt;<a name="line.147"></a>
+<span class="sourceLineNo">148</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.7'&gt;2.7&lt;/a&gt;<a name="line.148"></a>
+<span class="sourceLineNo">149</span>   */<a name="line.149"></a>
+<span class="sourceLineNo">150</span>  void untested_spec207_blackbox_mustEnsureAllCallsOnItsSubscriptionTakePlaceFromTheSameThreadOrTakeCareOfSynchronization() throws Exception;<a name="line.150"></a>
+<span class="sourceLineNo">151</span>  /**<a name="line.151"></a>
+<span class="sourceLineNo">152</span>   * Currently, this test is skipped because there is no way to make the {@code Subscriber} implementation<a name="line.152"></a>
+<span class="sourceLineNo">153</span>   * cancel the test's {@code Subscription} and check the outcome of sending {@code onNext}s after such<a name="line.153"></a>
+<span class="sourceLineNo">154</span>   * cancel.<a name="line.154"></a>
+<span class="sourceLineNo">155</span>   * &lt;p&gt;<a name="line.155"></a>
+<span class="sourceLineNo">156</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.8'&gt;2.8&lt;/a&gt;<a name="line.156"></a>
+<span class="sourceLineNo">157</span>   */<a name="line.157"></a>
+<span class="sourceLineNo">158</span>  void untested_spec208_blackbox_mustBePreparedToReceiveOnNextSignalsAfterHavingCalledSubscriptionCancel() throws Throwable;<a name="line.158"></a>
+<span class="sourceLineNo">159</span>  /**<a name="line.159"></a>
+<span class="sourceLineNo">160</span>   * Asks for a {@code Subscriber}, expects it to request some amount and in turn be able to receive an {@code onComplete}<a name="line.160"></a>
+<span class="sourceLineNo">161</span>   * synchronously from the {@code request} call without any {@code onNext} signals before that.<a name="line.161"></a>
+<span class="sourceLineNo">162</span>   * &lt;p&gt;<a name="line.162"></a>
+<span class="sourceLineNo">163</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.9'&gt;2.9&lt;/a&gt;<a name="line.163"></a>
+<span class="sourceLineNo">164</span>   * &lt;p&gt;<a name="line.164"></a>
+<span class="sourceLineNo">165</span>   * Notes:<a name="line.165"></a>
+<span class="sourceLineNo">166</span>   * &lt;ul&gt;<a name="line.166"></a>
+<span class="sourceLineNo">167</span>   * &lt;li&gt;The test ignores cancellation from the {@code Subscriber}.&lt;/li&gt;<a name="line.167"></a>
+<span class="sourceLineNo">168</span>   * &lt;li&gt;Invalid request amounts are ignored by this test.&lt;/li&gt;<a name="line.168"></a>
+<span class="sourceLineNo">169</span>   * &lt;li&gt;Concurrent calls to the test's {@code Subscription.request()} must be externally synchronized, otherwise<a name="line.169"></a>
+<span class="sourceLineNo">170</span>   * such case results probabilistically in multiple {@code onComplete} calls by the test.&lt;/li&gt;<a name="line.170"></a>
+<span class="sourceLineNo">171</span>   * &lt;/ul&gt;<a name="line.171"></a>
+<span class="sourceLineNo">172</span>   * &lt;p&gt;<a name="line.172"></a>
+<span class="sourceLineNo">173</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.173"></a>
+<span class="sourceLineNo">174</span>   * &lt;ul&gt;<a name="line.174"></a>
+<span class="sourceLineNo">175</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.175"></a>
+<span class="sourceLineNo">176</span>   * {@code onComplete} methods.<a name="line.176"></a>
+<span class="sourceLineNo">177</span>   * &lt;li&gt;if the {@code Subscriber} requires external stimulus to begin requesting; override the<a name="line.177"></a>
+<span class="sourceLineNo">178</span>   * {@link SubscriberBlackboxVerification#triggerRequest(org.reactivestreams.Subscriber)} method<a name="line.178"></a>
+<span class="sourceLineNo">179</span>   *  in this case,&lt;/li&gt;<a name="line.179"></a>
+<span class="sourceLineNo">180</span>   * &lt;/ul&gt;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>   */<a name="line.181"></a>
+<span class="sourceLineNo">182</span>  void required_spec209_blackbox_mustBePreparedToReceiveAnOnCompleteSignalWithPrecedingRequestCall() throws Throwable;<a name="line.182"></a>
+<span class="sourceLineNo">183</span>  /**<a name="line.183"></a>
+<span class="sourceLineNo">184</span>   * Asks for a {@code Subscriber} and expects it to handle {@code onComplete} independent of whether the {@code Subscriber}<a name="line.184"></a>
+<span class="sourceLineNo">185</span>   * requests items or not.<a name="line.185"></a>
+<span class="sourceLineNo">186</span>   * &lt;p&gt;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.9'&gt;2.9&lt;/a&gt;<a name="line.187"></a>
+<span class="sourceLineNo">188</span>   * &lt;p&gt;<a name="line.188"></a>
+<span class="sourceLineNo">189</span>   * Notes:<a name="line.189"></a>
+<span class="sourceLineNo">190</span>   * &lt;ul&gt;<a name="line.190"></a>
+<span class="sourceLineNo">191</span>   * &lt;li&gt;Currently, the test doesn't call {@code onSubscribe} on the {@code Subscriber} which violates §1.9.<a name="line.191"></a>
+<span class="sourceLineNo">192</span>   * &lt;/ul&gt;<a name="line.192"></a>
+<span class="sourceLineNo">193</span>   * &lt;p&gt;<a name="line.193"></a>
+<span class="sourceLineNo">194</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.194"></a>
+<span class="sourceLineNo">195</span>   * &lt;ul&gt;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.196"></a>
+<span class="sourceLineNo">197</span>   * {@code onComplete} methods.<a name="line.197"></a>
+<span class="sourceLineNo">198</span>   * &lt;/ul&gt;<a name="line.198"></a>
+<span class="sourceLineNo">199</span>   */<a name="line.199"></a>
+<span class="sourceLineNo">200</span>  void required_spec209_blackbox_mustBePreparedToReceiveAnOnCompleteSignalWithoutPrecedingRequestCall() throws Throwable;<a name="line.200"></a>
+<span class="sourceLineNo">201</span>  /**<a name="line.201"></a>
+<span class="sourceLineNo">202</span>   * Asks for a {@code Subscriber}, signals {@code onSubscribe} followed by an {@code onError} synchronously.<a name="line.202"></a>
+<span class="sourceLineNo">203</span>   * &lt;p&gt;<a name="line.203"></a>
+<span class="sourceLineNo">204</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.10'&gt;2.10&lt;/a&gt;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>   * &lt;p&gt;<a name="line.205"></a>
+<span class="sourceLineNo">206</span>   * Notes:<a name="line.206"></a>
+<span class="sourceLineNo">207</span>   * &lt;ul&gt;<a name="line.207"></a>
+<span class="sourceLineNo">208</span>   * &lt;li&gt;Despite the method name, the test doesn't expect a request signal from {@code Subscriber} and emits the<a name="line.208"></a>
+<span class="sourceLineNo">209</span>   * {@code onError} signal anyway.<a name="line.209"></a>
+<span class="sourceLineNo">210</span>   * &lt;/ul&gt;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>   * &lt;p&gt;<a name="line.211"></a>
+<span class="sourceLineNo">212</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.212"></a>
+<span class="sourceLineNo">213</span>   * &lt;ul&gt;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.214"></a>
+<span class="sourceLineNo">215</span>   * {@code onError} methods.<a name="line.215"></a>
+<span class="sourceLineNo">216</span>   * &lt;/ul&gt;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>   */<a name="line.217"></a>
+<span class="sourceLineNo">218</span>  void required_spec210_blackbox_mustBePreparedToReceiveAnOnErrorSignalWithPrecedingRequestCall() throws Throwable;<a name="line.218"></a>
+<span class="sourceLineNo">219</span><a name="line.219"></a>
+<span class="sourceLineNo">220</span>  /**<a name="line.220"></a>
+<span class="sourceLineNo">221</span>   * Asks for a {@code Subscriber}, signals {@code onSubscribe} followed by an {@code onError} synchronously.<a name="line.221"></a>
+<span class="sourceLineNo">222</span>   * &lt;p&gt;<a name="line.222"></a>
+<span class="sourceLineNo">223</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.10'&gt;2.10&lt;/a&gt;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>   * &lt;p&gt;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.225"></a>
+<span class="sourceLineNo">226</span>   * &lt;ul&gt;<a name="line.226"></a>
+<span class="sourceLineNo">227</span>   * &lt;li&gt;if the {@code Subscriber} throws an unchecked exception from its {@code onSubscribe} or<a name="line.227"></a>
+<span class="sourceLineNo">228</span>   * {@code onError} methods.<a name="line.228"></a>
+<span class="sourceLineNo">229</span>   * &lt;/ul&gt;<a name="line.229"></a>
+<span class="sourceLineNo">230</span>   */<a name="line.230"></a>
+<span class="sourceLineNo">231</span>  void required_spec210_blackbox_mustBePreparedToReceiveAnOnErrorSignalWithoutPrecedingRequestCall() throws Throwable;<a name="line.231"></a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span>  /**<a name="line.233"></a>
+<span class="sourceLineNo">234</span>   * Currently, this test is skipped because it would require analyzing what the {@code Subscriber} implementation<a name="line.234"></a>
+<span class="sourceLineNo">235</span>   * does.<a name="line.235"></a>
+<span class="sourceLineNo">236</span>   * &lt;p&gt;<a name="line.236"></a>
+<span class="sourceLineNo">237</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.11'&gt;2.11&lt;/a&gt;<a name="line.237"></a>
+<span class="sourceLineNo">238</span>   */<a name="line.238"></a>
+<span class="sourceLineNo">239</span>  void untested_spec211_blackbox_mustMakeSureThatAllCallsOnItsMethodsHappenBeforeTheProcessingOfTheRespectiveEvents() throws Exception;<a name="line.239"></a>
+<span class="sourceLineNo">240</span>  /**<a name="line.240"></a>
+<span class="sourceLineNo">241</span>   * Currently, this test is skipped because the test for<a name="line.241"></a>
+<span class="sourceLineNo">242</span>   * {@link #required_spec205_blackbox_mustCallSubscriptionCancelIfItAlreadyHasAnSubscriptionAndReceivesAnotherOnSubscribeSignal §2.5}<a name="line.242"></a>
+<span class="sourceLineNo">243</span>   * is in a better position to test for handling the reuse of the same {@code Subscriber}. <a name="line.243"></a>
+<span class="sourceLineNo">244</span>   * &lt;p&gt;<a name="line.244"></a>
+<span class="sourceLineNo">245</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.12'&gt;2.12&lt;/a&gt;<a name="line.245"></a>
+<span class="sourceLineNo">246</span>   * &lt;p&gt;<a name="line.246"></a>
+<span class="sourceLineNo">247</span>   * Notes:<a name="line.247"></a>
+<span class="sourceLineNo">248</span>   * &lt;ul&gt;<a name="line.248"></a>
+<span class="sourceLineNo">249</span>   * &lt;li&gt;In addition to §2.5, this rule could be better verified when testing a {@code Publisher}'s subscription behavior.<a name="line.249"></a>
+<span class="sourceLineNo">250</span>   * &lt;/ul&gt;<a name="line.250"></a>
+<span class="sourceLineNo">251</span>   */<a name="line.251"></a>
+<span class="sourceLineNo">252</span>  void untested_spec212_blackbox_mustNotCallOnSubscribeMoreThanOnceBasedOnObjectEquality() throws Throwable;<a name="line.252"></a>
+<span class="sourceLineNo">253</span>  /**<a name="line.253"></a>
+<span class="sourceLineNo">254</span>   * Currently, this test is skipped because it would require more control over the {@code Subscriber} to<a name="line.254"></a>
+<span class="sourceLineNo">255</span>   * fail internally in response to a set of legal event emissions, not throw any exception from the {@code Subscriber}<a name="line.255"></a>
+<span class="sourceLineNo">256</span>   * methods and have it cancel the {@code Subscription}.<a name="line.256"></a>
+<span class="sourceLineNo">257</span>   * &lt;p&gt;<a name="line.257"></a>
+<span class="sourceLineNo">258</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.13'&gt;2.13&lt;/a&gt;<a name="line.258"></a>
+<span class="sourceLineNo">259</span>   */<a name="line.259"></a>
+<span class="sourceLineNo">260</span>  void untested_spec213_blackbox_failingOnSignalInvocation() throws Exception;<a name="line.260"></a>
+<span class="sourceLineNo">261</span>  /**<a name="line.261"></a>
+<span class="sourceLineNo">262</span>   * Asks for a {@code Subscriber} and signals an {@code onSubscribe} event with {@code null} as a parameter and<a name="line.262"></a>
+<span class="sourceLineNo">263</span>   * expects an immediate {@code NullPointerException} to be thrown by the {@code Subscriber.onSubscribe} method.<a name="line.263"></a>
+<span class="sourceLineNo">264</span>   * &lt;p&gt;<a name="line.264"></a>
+<span class="sourceLineNo">265</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.13'&gt;2.13&lt;/a&gt;<a name="line.265"></a>
+<span class="sourceLineNo">266</span>   * &lt;p&gt;<a name="line.266"></a>
+<span class="sourceLineNo">267</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.267"></a>
+<span class="sourceLineNo">268</span>   * &lt;ul&gt;<a name="line.268"></a>
+<span class="sourceLineNo">269</span>   * &lt;li&gt;if the {@code Subscriber} throws a {@code NullPointerException} from its {@code onSubscribe} method<a name="line.269"></a>
+<span class="sourceLineNo">270</span>   * in response to a {@code null} parameter and not some other unchecked exception or no exception at all.<a name="line.270"></a>
+<span class="sourceLineNo">271</span>   * &lt;/ul&gt;<a name="line.271"></a>
+<span class="sourceLineNo">272</span>   */<a name="line.272"></a>
+<span class="sourceLineNo">273</span>  void required_spec213_blackbox_onSubscribe_mustThrowNullPointerExceptionWhenParametersAreNull() throws Throwable;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>  /**<a name="line.274"></a>
+<span class="sourceLineNo">275</span>   * Asks for a {@code Subscriber}, signals an {@code onSubscribe} event followed by a<a name="line.275"></a>
+<span class="sourceLineNo">276</span>   * {@code onNext} with {@code null} as a parameter and<a name="line.276"></a>
+<span class="sourceLineNo">277</span>   * expects an immediate {@code NullPointerException} to be thrown by the {@code Subscriber.onNext} method.<a name="line.277"></a>
+<span class="sourceLineNo">278</span>   * &lt;p&gt;<a name="line.278"></a>
+<span class="sourceLineNo">279</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.13'&gt;2.13&lt;/a&gt;<a name="line.279"></a>
+<span class="sourceLineNo">280</span>   * &lt;p&gt;<a name="line.280"></a>
+<span class="sourceLineNo">281</span>   * Notes:<a name="line.281"></a>
+<span class="sourceLineNo">282</span>   * &lt;ul&gt;<a name="line.282"></a>
+<span class="sourceLineNo">283</span>   * &lt;li&gt;The test ignores cancellation and requests from the {@code Subscriber} and emits the {@code onNext}<a name="line.283"></a>
+<span class="sourceLineNo">284</span>   * signal with a {@code null} parameter anyway.&lt;/li&gt;<a name="line.284"></a>
+<span class="sourceLineNo">285</span>   * &lt;/ul&gt;<a name="line.285"></a>
+<span class="sourceLineNo">286</span>   * &lt;p&gt;<a name="line.286"></a>
+<span class="sourceLineNo">287</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.287"></a>
+<span class="sourceLineNo">288</span>   * &lt;ul&gt;<a name="line.288"></a>
+<span class="sourceLineNo">289</span>   * &lt;li&gt;if the {@code Subscriber} throws a {@code NullPointerException} from its {@code onNext} method<a name="line.289"></a>
+<span class="sourceLineNo">290</span>   * in response to a {@code null} parameter and not some other unchecked exception or no exception at all.<a name="line.290"></a>
+<span class="sourceLineNo">291</span>   * &lt;/ul&gt;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>   */<a name="line.292"></a>
+<span class="sourceLineNo">293</span>  void required_spec213_blackbox_onNext_mustThrowNullPointerExceptionWhenParametersAreNull() throws Throwable;<a name="line.293"></a>
+<span class="sourceLineNo">294</span>  /**<a name="line.294"></a>
+<span class="sourceLineNo">295</span>   * Asks for a {@code Subscriber}, signals an {@code onSubscribe} event followed by a<a name="line.295"></a>
+<span class="sourceLineNo">296</span>   * {@code onError} with {@code null} as a parameter and<a name="line.296"></a>
+<span class="sourceLineNo">297</span>   * expects an immediate {@code NullPointerException} to be thrown by the {@code Subscriber.onError} method.<a name="line.297"></a>
+<span class="sourceLineNo">298</span>   * &lt;p&gt;<a name="line.298"></a>
+<span class="sourceLineNo">299</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#2.13'&gt;2.13&lt;/a&gt;<a name="line.299"></a>
+<span class="sourceLineNo">300</span>   * &lt;p&gt;<a name="line.300"></a>
+<span class="sourceLineNo">301</span>   * Notes:<a name="line.301"></a>
+<span class="sourceLineNo">302</span>   * &lt;ul&gt;<a name="line.302"></a>
+<span class="sourceLineNo">303</span>   * &lt;li&gt;The test ignores cancellation from the {@code Subscriber} and emits the {@code onError}<a name="line.303"></a>
+<span class="sourceLineNo">304</span>   * signal with a {@code null} parameter anyway.&lt;/li&gt;<a name="line.304"></a>
+<span class="sourceLineNo">305</span>   * &lt;/ul&gt;<a name="line.305"></a>
+<span class="sourceLineNo">306</span>   * &lt;p&gt;<a name="line.306"></a>
+<span class="sourceLineNo">307</span>   * If this test fails, the following could be checked within the {@code Subscriber} implementation:<a name="line.307"></a>
+<span class="sourceLineNo">308</span>   * &lt;ul&gt;<a name="line.308"></a>
+<span class="sourceLineNo">309</span>   * &lt;li&gt;if the {@code Subscriber} throws a {@code NullPointerException} from its {@code onNext} method<a name="line.309"></a>
+<span class="sourceLineNo">310</span>   * in response to a {@code null} parameter and not some other unchecked exception or no exception at all.<a name="line.310"></a>
+<span class="sourceLineNo">311</span>   * &lt;/ul&gt;<a name="line.311"></a>
+<span class="sourceLineNo">312</span>   */<a name="line.312"></a>
+<span class="sourceLineNo">313</span>  void required_spec213_blackbox_onError_mustThrowNullPointerExceptionWhenParametersAreNull() throws Throwable;<a name="line.313"></a>
+<span class="sourceLineNo">314</span>  /**<a name="line.314"></a>
+<span class="sourceLineNo">315</span>   * Currently, this test is skipped because there is no agreed upon way for specifying, enforcing and testing<a name="line.315"></a>
+<span class="sourceLineNo">316</span>   * a {@code Subscriber} with an arbitrary context.<a name="line.316"></a>
+<span class="sourceLineNo">317</span>   * &lt;p&gt;<a name="line.317"></a>
+<span class="sourceLineNo">318</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.1'&gt;3.1&lt;/a&gt;<a name="line.318"></a>
+<span class="sourceLineNo">319</span>   */<a name="line.319"></a>
+<span class="sourceLineNo">320</span>  void untested_spec301_blackbox_mustNotBeCalledOutsideSubscriberContext() throws Exception;<a name="line.320"></a>
+<span class="sourceLineNo">321</span>  /**<a name="line.321"></a>
+<span class="sourceLineNo">322</span>   * Currently, this test is skipped because element production is the responsibility of the {@code Publisher} and<a name="line.322"></a>
+<span class="sourceLineNo">323</span>   * a {@code Subscription} is not expected to be the active element in an established subscription.<a name="line.323"></a>
+<span class="sourceLineNo">324</span>   * &lt;p&gt;<a name="line.324"></a>
+<span class="sourceLineNo">325</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.8'&gt;3.8&lt;/a&gt;<a name="line.325"></a>
+<span class="sourceLineNo">326</span>   */<a name="line.326"></a>
+<span class="sourceLineNo">327</span>  void untested_spec308_blackbox_requestMustRegisterGivenNumberElementsToBeProduced() throws Throwable;<a name="line.327"></a>
+<span class="sourceLineNo">328</span>  /**<a name="line.328"></a>
+<span class="sourceLineNo">329</span>   * Currently, this test is skipped because element production is the responsibility of the {@code Publisher} and<a name="line.329"></a>
+<span class="sourceLineNo">330</span>   * a {@code Subscription} is not expected to be the active element in an established subscription.<a name="line.330"></a>
+<span class="sourceLineNo">331</span>   * &lt;p&gt;<a name="line.331"></a>
+<span class="sourceLineNo">332</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.10'&gt;3.10&lt;/a&gt;<a name="line.332"></a>
+<span class="sourceLineNo">333</span>   * &lt;p&gt;<a name="line.333"></a>
+<span class="sourceLineNo">334</span>   * Notes:<a name="line.334"></a>
+<span class="sourceLineNo">335</span>   * &lt;ul&gt;<a name="line.335"></a>
+<span class="sourceLineNo">336</span>   * &lt;li&gt;This could be tested with a synchronous source currently not available within the TCK.&lt;/li&gt;<a name="line.336"></a>
+<span class="sourceLineNo">337</span>   * &lt;/ul&gt;<a name="line.337"></a>
+<span class="sourceLineNo">338</span>   */<a name="line.338"></a>
+<span class="sourceLineNo">339</span>  void untested_spec310_blackbox_requestMaySynchronouslyCallOnNextOnSubscriber() throws Exception;<a name="line.339"></a>
+<span class="sourceLineNo">340</span>  /**<a name="line.340"></a>
+<span class="sourceLineNo">341</span>   * Currently, this test is skipped because signal production is the responsibility of the {@code Publisher} and<a name="line.341"></a>
+<span class="sourceLineNo">342</span>   * a {@code Subscription} is not expected to be the active element in an established subscription.<a name="line.342"></a>
+<span class="sourceLineNo">343</span>   * &lt;p&gt;<a name="line.343"></a>
+<span class="sourceLineNo">344</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.11'&gt;3.11&lt;/a&gt;<a name="line.344"></a>
+<span class="sourceLineNo">345</span>   * &lt;p&gt;<a name="line.345"></a>
+<span class="sourceLineNo">346</span>   * Notes:<a name="line.346"></a>
+<span class="sourceLineNo">347</span>   * &lt;ul&gt;<a name="line.347"></a>
+<span class="sourceLineNo">348</span>   * &lt;li&gt;Tests {@link #required_spec209_blackbox_mustBePreparedToReceiveAnOnCompleteSignalWithPrecedingRequestCall() §2.9}<a name="line.348"></a>
+<span class="sourceLineNo">349</span>   * and {@link #required_spec210_blackbox_mustBePreparedToReceiveAnOnErrorSignalWithPrecedingRequestCall() §2.10} are<a name="line.349"></a>
+<span class="sourceLineNo">350</span>   * supposed to cover this case from the {@code Subscriber's} perspective.&lt;/li&gt;<a name="line.350"></a>
+<span class="sourceLineNo">351</span>   * &lt;/ul&gt;<a name="line.351"></a>
+<span class="sourceLineNo">352</span>   */<a name="line.352"></a>
+<span class="sourceLineNo">353</span>  void untested_spec311_blackbox_requestMaySynchronouslyCallOnCompleteOrOnError() throws Exception;<a name="line.353"></a>
+<span class="sourceLineNo">354</span>  /**<a name="line.354"></a>
+<span class="sourceLineNo">355</span>   * Currently, this test is skipped because it is the responsibility of the {@code Publisher} deal with the case<a name="line.355"></a>
+<span class="sourceLineNo">356</span>   * that all subscribers have cancelled their subscription.<a name="line.356"></a>
+<span class="sourceLineNo">357</span>   * &lt;p&gt;<a name="line.357"></a>
+<span class="sourceLineNo">358</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.14'&gt;3.14&lt;/a&gt;<a name="line.358"></a>
+<span class="sourceLineNo">359</span>   * &lt;p&gt;<a name="line.359"></a>
+<span class="sourceLineNo">360</span>   * Notes:<a name="line.360"></a>
+<span class="sourceLineNo">361</span>   * &lt;ul&gt;<a name="line.361"></a>
+<span class="sourceLineNo">362</span>   * &lt;li&gt;The specification lists this as an optional behavior because only some {@code Publisher} implementations<a name="line.362"></a>
+<span class="sourceLineNo">363</span>   * (most likely {@code Processor}s) would coordinate with multiple {@code Subscriber}s.&lt;/li&gt;<a name="line.363"></a>
+<span class="sourceLineNo">364</span>   * &lt;/ul&gt;<a name="line.364"></a>
+<span class="sourceLineNo">365</span>   */<a name="line.365"></a>
+<span class="sourceLineNo">366</span>  void untested_spec314_blackbox_cancelMayCauseThePublisherToShutdownIfNoOtherSubscriptionExists() throws Exception;<a name="line.366"></a>
+<span class="sourceLineNo">367</span>  /**<a name="line.367"></a>
+<span class="sourceLineNo">368</span>   * Currently, this test is skipped because it requires more control over the {@code Subscriber} implementation<a name="line.368"></a>
+<span class="sourceLineNo">369</span>   * thus there is no way to detect that the {@code Subscriber} called its own {@code onError} method in response<a name="line.369"></a>
+<span class="sourceLineNo">370</span>   * to an exception thrown from {@code Subscription.cancel}.<a name="line.370"></a>
+<span class="sourceLineNo">371</span>   * &lt;p&gt;<a name="line.371"></a>
+<span class="sourceLineNo">372</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.15'&gt;3.15&lt;/a&gt;<a name="line.372"></a>
+<span class="sourceLineNo">373</span>   */<a name="line.373"></a>
+<span class="sourceLineNo">374</span>  void untested_spec315_blackbox_cancelMustNotThrowExceptionAndMustSignalOnError() throws Exception;<a name="line.374"></a>
+<span class="sourceLineNo">375</span>  /**<a name="line.375"></a>
+<span class="sourceLineNo">376</span>   * Currently, this test is skipped because it requires more control over the {@code Subscriber} implementation<a name="line.376"></a>
+<span class="sourceLineNo">377</span>   * thus there is no way to detect that the {@code Subscriber} called its own {@code onError} method in response<a name="line.377"></a>
+<span class="sourceLineNo">378</span>   * to an exception thrown from {@code Subscription.request}.<a name="line.378"></a>
+<span class="sourceLineNo">379</span>   * &lt;p&gt;<a name="line.379"></a>
+<span class="sourceLineNo">380</span>   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.16'&gt;3.16&lt;/a&gt;<a name="line.380"></a>
+<span class="sourceLineNo">381</span>   */<a name="line.381"></a>
+<span class="sourceLineNo">382</span>  void untested_spec316_blackbox_requestMustNotThrowExceptionAndMustOnErrorTheSubscriber() throws Exception;<a name="line.382"></a>
+<span class="sourceLineNo">383</span>}<a name="line.383"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
