@@ -28,28 +28,28 @@ The basic semantics define how the transmission of stream elements is regulated 
 
 This working group applies the basic semantics to a set of programming interfaces whose main purpose is to allow the interoperation of different conforming implementations and language bindings for passing streams between objects and threads within the JVM, using the shared memory heap.
 
-As of *April 30, 2015* we have released version 1.0.0 of Reactive Streams for the JVM, including Java [API](/reactive-streams-1.0.0-javadoc), a textual [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0/README.md#specification), a [TCK](/reactive-streams-tck-1.0.0-javadoc) and [implementation examples](/reactive-streams-examples-1.0.0-javadoc). Corresponding code artifacts are available on Maven Central:
+As of *August 9, 2017* we have released version 1.0.1 of Reactive Streams for the JVM, including Java [API](/reactive-streams-1.0.1-javadoc), a textual [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.1/README.md#specification), a [TCK](/reactive-streams-tck-1.0.1-javadoc) and [implementation examples](/reactive-streams-examples-1.0.1-javadoc). Corresponding code artifacts are available on Maven Central:
 
     <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams-tck</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
 
-The source code for these is available on [github](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0). Please use github issues for providing feedback.
+The source code for these is available on [github](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.1). Please use github issues for providing feedback.
 
 All artifacts and specifications are released under [Creative Commons Zero](http://creativecommons.org/publicdomain/zero/1.0) into the Public Domain.
 
-Read more about `Reactive Streams 1.0.0` for the JVM [here](announce-1.0.0).
+Read more about `Reactive Streams 1.0.1` for the JVM [here](announce-1.0.1).
 
 ##### A Note for Implementors
 
-To get started implementing the final specification, it is recommended to start by reading the [README](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0/README.md) and the [Java API documentation](/reactive-streams-1.0.0-javadoc), then taking a look at the [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.0/README.md#specification) then taking a look at the [TCK](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0/tck) and the [example implementations](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.0/examples/src/main/java/org/reactivestreams/example/unicast). If you have an issue with any of the above, please take a look at [closed issues](https://github.com/reactive-streams/reactive-streams-jvm/issues?page=1&state=closed) and then open a [new issue](https://github.com/reactive-streams/reactive-streams-jvm/issues/new) if it has not already been answered.
+To get started implementing the final specification, it is recommended to start by reading the [README](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.1/README.md) and the [Java API documentation](/reactive-streams-1.0.1-javadoc), then taking a look at the [Specification](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.1/README.md#specification) then taking a look at the [TCK](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.1/tck) and the [example implementations](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.1/examples/src/main/java/org/reactivestreams/example/unicast). If you have an issue with any of the above, please take a look at [closed issues](https://github.com/reactive-streams/reactive-streams-jvm/issues?page=1&state=closed) and then open a [new issue](https://github.com/reactive-streams/reactive-streams-jvm/issues/new) if it has not already been answered.
 
 This work was performed in the [reactive-streams-jvm](https://github.com/reactive-streams/reactive-streams-jvm/) repository.
 

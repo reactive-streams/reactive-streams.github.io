@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="sv">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/************************************************************************<a name="line.1"></a>
+<span class="sourceLineNo">002</span>* Licensed under Public Domain (CC0)                                    *<a name="line.2"></a>
+<span class="sourceLineNo">003</span>*                                                                       *<a name="line.3"></a>
+<span class="sourceLineNo">004</span>* To the extent possible under law, the person who associated CC0 with  *<a name="line.4"></a>
+<span class="sourceLineNo">005</span>* this code has waived all copyright and related or neighboring         *<a name="line.5"></a>
+<span class="sourceLineNo">006</span>* rights to this code.                                                  *<a name="line.6"></a>
+<span class="sourceLineNo">007</span>*                                                                       *<a name="line.7"></a>
+<span class="sourceLineNo">008</span>* You should have received a copy of the CC0 legalcode along with this  *<a name="line.8"></a>
+<span class="sourceLineNo">009</span>* work. If not, see &lt;http://creativecommons.org/publicdomain/zero/1.0/&gt;.*<a name="line.9"></a>
+<span class="sourceLineNo">010</span>************************************************************************/<a name="line.10"></a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span>package org.reactivestreams.example.unicast;<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.reactivestreams.Subscriber;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.reactivestreams.Subscription;<a name="line.15"></a>
+<span class="sourceLineNo">016</span><a name="line.16"></a>
+<span class="sourceLineNo">017</span>import java.util.concurrent.Executor;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import java.util.concurrent.atomic.AtomicBoolean;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.util.concurrent.ConcurrentLinkedQueue;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>/**<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * AsyncSubscriber is an implementation of Reactive Streams `Subscriber`,<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * it runs asynchronously (on an Executor), requests one element<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * at a time, and invokes a user-defined method to process each element.<a name="line.24"></a>
+<span class="sourceLineNo">025</span> *<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * NOTE: The code below uses a lot of try-catches to show the reader where exceptions can be expected, and where they are forbidden.<a name="line.26"></a>
+<span class="sourceLineNo">027</span> */<a name="line.27"></a>
+<span class="sourceLineNo">028</span>public abstract class AsyncSubscriber&lt;T&gt; implements Subscriber&lt;T&gt;, Runnable {<a name="line.28"></a>
+<span class="sourceLineNo">029</span><a name="line.29"></a>
+<span class="sourceLineNo">030</span>  // Signal represents the asynchronous protocol between the Publisher and Subscriber<a name="line.30"></a>
+<span class="sourceLineNo">031</span>  private static interface Signal {}<a name="line.31"></a>
+<span class="sourceLineNo">032</span><a name="line.32"></a>
+<span class="sourceLineNo">033</span>  private enum OnComplete implements Signal { Instance; }<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>  private static class OnError implements Signal {<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    public final Throwable error;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    public OnError(final Throwable error) { this.error = error; }<a name="line.37"></a>
+<span class="sourceLineNo">038</span>  }<a name="line.38"></a>
+<span class="sourceLineNo">039</span><a name="line.39"></a>
+<span class="sourceLineNo">040</span>  private static class OnNext&lt;T&gt; implements Signal {<a name="line.40"></a>
+<span class="sourceLineNo">041</span>    public final T next;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    public OnNext(final T next) { this.next = next; }<a name="line.42"></a>
+<span class="sourceLineNo">043</span>  }<a name="line.43"></a>
+<span class="sourceLineNo">044</span><a name="line.44"></a>
+<span class="sourceLineNo">045</span>  private static class OnSubscribe implements Signal {<a name="line.45"></a>
+<span class="sourceLineNo">046</span>    public final Subscription subscription;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>    public OnSubscribe(final Subscription subscription) { this.subscription = subscription; }<a name="line.47"></a>
+<span class="sourceLineNo">048</span>  }<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>  private Subscription subscription; // Obeying rule 3.1, we make this private!<a name="line.50"></a>
+<span class="sourceLineNo">051</span>  private boolean done; // It's useful to keep track of whether this Subscriber is done or not<a name="line.51"></a>
+<span class="sourceLineNo">052</span>  private final Executor executor; // This is the Executor we'll use to be asynchronous, obeying rule 2.2<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>  // Only one constructor, and it's only accessible for the subclasses<a name="line.54"></a>
+<span class="sourceLineNo">055</span>  protected AsyncSubscriber(Executor executor) {<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    if (executor == null) throw null;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>    this.executor = executor;<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  }<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>  // Showcases a convenience method to idempotently marking the Subscriber as "done", so we don't want to process more elements<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  // herefor we also need to cancel our `Subscription`.<a name="line.61"></a>
+<span class="sourceLineNo">062</span>  private final void done() {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    //On this line we could add a guard against `!done`, but since rule 3.7 says that `Subscription.cancel()` is idempotent, we don't need to.<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    done = true; // If `whenNext` throws an exception, let's consider ourselves done (not accepting more elements)<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    if (subscription != null) { // If we are bailing out before we got a `Subscription` there's little need for cancelling it.<a name="line.65"></a>
+<span class="sourceLineNo">066</span>      try {<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        subscription.cancel(); // Cancel the subscription<a name="line.67"></a>
+<span class="sourceLineNo">068</span>      } catch(final Throwable t) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        //Subscription.cancel is not allowed to throw an exception, according to rule 3.15<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        (new IllegalStateException(subscription + " violated the Reactive Streams rule 3.15 by throwing an exception from cancel.", t)).printStackTrace(System.err);<a name="line.70"></a>
+<span class="sourceLineNo">071</span>      }<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
+<span class="sourceLineNo">073</span>  }<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>  // This method is invoked when the OnNext signals arrive<a name="line.75"></a>
+<span class="sourceLineNo">076</span>  // Returns whether more elements are desired or not, and if no more elements are desired,<a name="line.76"></a>
+<span class="sourceLineNo">077</span>  // for convenience.<a name="line.77"></a>
+<span class="sourceLineNo">078</span>  protected abstract boolean whenNext(final T element);<a name="line.78"></a>
+<span class="sourceLineNo">079</span><a name="line.79"></a>
+<span class="sourceLineNo">080</span>  // This method is invoked when the OnComplete signal arrives<a name="line.80"></a>
+<span class="sourceLineNo">081</span>  // override this method to implement your own custom onComplete logic.<a name="line.81"></a>
+<span class="sourceLineNo">082</span>  protected void whenComplete() { }<a name="line.82"></a>
+<span class="sourceLineNo">083</span><a name="line.83"></a>
+<span class="sourceLineNo">084</span>  // This method is invoked if the OnError signal arrives<a name="line.84"></a>
+<span class="sourceLineNo">085</span>  // override this method to implement your own custom onError logic.<a name="line.85"></a>
+<span class="sourceLineNo">086</span>  protected void whenError(Throwable error) { }<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>  private final void handleOnSubscribe(final Subscription s) {<a name="line.88"></a>
+<span class="sourceLineNo">089</span>    if (s == null) {<a name="line.89"></a>
+<span class="sourceLineNo">090</span>      // Getting a null `Subscription` here is not valid so lets just ignore it.<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    } else if (subscription != null) { // If someone has made a mistake and added this Subscriber multiple times, let's handle it gracefully<a name="line.91"></a>
+<span class="sourceLineNo">092</span>      try {<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        s.cancel(); // Cancel the additional subscription to follow rule 2.5<a name="line.93"></a>
+<span class="sourceLineNo">094</span>      } catch(final Throwable t) {<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        //Subscription.cancel is not allowed to throw an exception, according to rule 3.15<a name="line.95"></a>
+<span class="sourceLineNo">096</span>        (new IllegalStateException(s + " violated the Reactive Streams rule 3.15 by throwing an exception from cancel.", t)).printStackTrace(System.err);<a name="line.96"></a>
+<span class="sourceLineNo">097</span>      }<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    } else {<a name="line.98"></a>
+<span class="sourceLineNo">099</span>      // We have to assign it locally before we use it, if we want to be a synchronous `Subscriber`<a name="line.99"></a>
+<span class="sourceLineNo">100</span>      // Because according to rule 3.10, the Subscription is allowed to call `onNext` synchronously from within `request`<a name="line.100"></a>
+<span class="sourceLineNo">101</span>      subscription = s;<a name="line.101"></a>
+<span class="sourceLineNo">102</span>      try {<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        // If we want elements, according to rule 2.1 we need to call `request`<a name="line.103"></a>
+<span class="sourceLineNo">104</span>        // And, according to rule 3.2 we are allowed to call this synchronously from within the `onSubscribe` method<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        s.request(1); // Our Subscriber is unbuffered and modest, it requests one element at a time<a name="line.105"></a>
+<span class="sourceLineNo">106</span>      } catch(final Throwable t) {<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        // Subscription.request is not allowed to throw according to rule 3.16<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        (new IllegalStateException(s + " violated the Reactive Streams rule 3.16 by throwing an exception from request.", t)).printStackTrace(System.err);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>      }<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    }<a name="line.110"></a>
+<span class="sourceLineNo">111</span>  }<a name="line.111"></a>
+<span class="sourceLineNo">112</span><a name="line.112"></a>
+<span class="sourceLineNo">113</span>  private final void handleOnNext(final T element) {<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    if (!done) { // If we aren't already done<a name="line.114"></a>
+<span class="sourceLineNo">115</span>      if(subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        // Check for spec violation of 2.1 and 1.09<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        (new IllegalStateException("Someone violated the Reactive Streams rule 1.09 and 2.1 by signalling OnNext before `Subscription.request`. (no Subscription)")).printStackTrace(System.err);<a name="line.117"></a>
+<span class="sourceLineNo">118</span>      } else {<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        try {<a name="line.119"></a>
+<span class="sourceLineNo">120</span>          if (whenNext(element)) {<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            try {<a name="line.121"></a>
+<span class="sourceLineNo">122</span>              subscription.request(1); // Our Subscriber is unbuffered and modest, it requests one element at a time<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            } catch(final Throwable t) {<a name="line.123"></a>
+<span class="sourceLineNo">124</span>              // Subscription.request is not allowed to throw according to rule 3.16<a name="line.124"></a>
+<span class="sourceLineNo">125</span>              (new IllegalStateException(subscription + " violated the Reactive Streams rule 3.16 by throwing an exception from request.", t)).printStackTrace(System.err);<a name="line.125"></a>
+<span class="sourceLineNo">126</span>            }<a name="line.126"></a>
+<span class="sourceLineNo">127</span>          } else {<a name="line.127"></a>
+<span class="sourceLineNo">128</span>            done(); // This is legal according to rule 2.6<a name="line.128"></a>
+<span class="sourceLineNo">129</span>          }<a name="line.129"></a>
+<span class="sourceLineNo">130</span>        } catch(final Throwable t) {<a name="line.130"></a>
+<span class="sourceLineNo">131</span>          done();<a name="line.131"></a>
+<span class="sourceLineNo">132</span>          try {  <a name="line.132"></a>
+<span class="sourceLineNo">133</span>            onError(t);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>          } catch(final Throwable t2) {<a name="line.134"></a>
+<span class="sourceLineNo">135</span>            //Subscriber.onError is not allowed to throw an exception, according to rule 2.13<a name="line.135"></a>
+<span class="sourceLineNo">136</span>            (new IllegalStateException(this + " violated the Reactive Streams rule 2.13 by throwing an exception from onError.", t2)).printStackTrace(System.err);<a name="line.136"></a>
+<span class="sourceLineNo">137</span>          }<a name="line.137"></a>
+<span class="sourceLineNo">138</span>        }<a name="line.138"></a>
+<span class="sourceLineNo">139</span>      }<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    }<a name="line.140"></a>
+<span class="sourceLineNo">141</span>  }<a name="line.141"></a>
+<span class="sourceLineNo">142</span><a name="line.142"></a>
+<span class="sourceLineNo">143</span>  // Here it is important that we do not violate 2.2 and 2.3 by calling methods on the `Subscription` or `Publisher`<a name="line.143"></a>
+<span class="sourceLineNo">144</span>  private void handleOnComplete() {<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    if (subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec<a name="line.145"></a>
+<span class="sourceLineNo">146</span>      // Publisher is not allowed to signal onComplete before onSubscribe according to rule 1.09<a name="line.146"></a>
+<span class="sourceLineNo">147</span>      (new IllegalStateException("Publisher violated the Reactive Streams rule 1.09 signalling onComplete prior to onSubscribe.")).printStackTrace(System.err);<a name="line.147"></a>
+<span class="sourceLineNo">148</span>    } else {<a name="line.148"></a>
+<span class="sourceLineNo">149</span>      done = true; // Obey rule 2.4<a name="line.149"></a>
+<span class="sourceLineNo">150</span>      whenComplete();<a name="line.150"></a>
+<span class="sourceLineNo">151</span>    }<a name="line.151"></a>
+<span class="sourceLineNo">152</span>  }<a name="line.152"></a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span>  // Here it is important that we do not violate 2.2 and 2.3 by calling methods on the `Subscription` or `Publisher`<a name="line.154"></a>
+<span class="sourceLineNo">155</span>  private void handleOnError(final Throwable error) {<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    if (subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec<a name="line.156"></a>
+<span class="sourceLineNo">157</span>      // Publisher is not allowed to signal onError before onSubscribe according to rule 1.09<a name="line.157"></a>
+<span class="sourceLineNo">158</span>      (new IllegalStateException("Publisher violated the Reactive Streams rule 1.09 signalling onError prior to onSubscribe.")).printStackTrace(System.err);<a name="line.158"></a>
+<span class="sourceLineNo">159</span>    } else {<a name="line.159"></a>
+<span class="sourceLineNo">160</span>      done = true; // Obey rule 2.4<a name="line.160"></a>
+<span class="sourceLineNo">161</span>      whenError(error);<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    }<a name="line.162"></a>
+<span class="sourceLineNo">163</span>  }<a name="line.163"></a>
+<span class="sourceLineNo">164</span><a name="line.164"></a>
+<span class="sourceLineNo">165</span>  // We implement the OnX methods on `Subscriber` to send Signals that we will process asycnhronously, but only one at a time<a name="line.165"></a>
+<span class="sourceLineNo">166</span><a name="line.166"></a>
+<span class="sourceLineNo">167</span>  @Override public final void onSubscribe(final Subscription s) {<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    // As per rule 2.13, we need to throw a `java.lang.NullPointerException` if the `Subscription` is `null`<a name="line.168"></a>
+<span class="sourceLineNo">169</span>    if (s == null) throw null;<a name="line.169"></a>
+<span class="sourceLineNo">170</span><a name="line.170"></a>
+<span class="sourceLineNo">171</span>    signal(new OnSubscribe(s));<a name="line.171"></a>
+<span class="sourceLineNo">172</span>  }<a name="line.172"></a>
+<span class="sourceLineNo">173</span><a name="line.173"></a>
+<span class="sourceLineNo">174</span>  @Override public final void onNext(final T element) {<a name="line.174"></a>
+<span class="sourceLineNo">175</span>    // As per rule 2.13, we need to throw a `java.lang.NullPointerException` if the `element` is `null`<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    if (element == null) throw null;<a name="line.176"></a>
+<span class="sourceLineNo">177</span><a name="line.177"></a>
+<span class="sourceLineNo">178</span>    signal(new OnNext&lt;T&gt;(element));<a name="line.178"></a>
+<span class="sourceLineNo">179</span>  }<a name="line.179"></a>
+<span class="sourceLineNo">180</span><a name="line.180"></a>
+<span class="sourceLineNo">181</span>  @Override public final void onError(final Throwable t) {<a name="line.181"></a>
+<span class="sourceLineNo">182</span>    // As per rule 2.13, we need to throw a `java.lang.NullPointerException` if the `Throwable` is `null`<a name="line.182"></a>
+<span class="sourceLineNo">183</span>    if (t == null) throw null;<a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>    signal(new OnError(t));<a name="line.185"></a>
+<span class="sourceLineNo">186</span>  }<a name="line.186"></a>
+<span class="sourceLineNo">187</span><a name="line.187"></a>
+<span class="sourceLineNo">188</span>  @Override public final void onComplete() {<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     signal(OnComplete.Instance);<a name="line.189"></a>
+<span class="sourceLineNo">190</span>  }<a name="line.190"></a>
+<span class="sourceLineNo">191</span><a name="line.191"></a>
+<span class="sourceLineNo">192</span>  // This `ConcurrentLinkedQueue` will track signals that are sent to this `Subscriber`, like `OnComplete` and `OnNext` ,<a name="line.192"></a>
+<span class="sourceLineNo">193</span>  // and obeying rule 2.11<a name="line.193"></a>
+<span class="sourceLineNo">194</span>  private final ConcurrentLinkedQueue&lt;Signal&gt; inboundSignals = new ConcurrentLinkedQueue&lt;Signal&gt;();<a name="line.194"></a>
+<span class="sourceLineNo">195</span><a name="line.195"></a>
+<span class="sourceLineNo">196</span>  // We are using this `AtomicBoolean` to make sure that this `Subscriber` doesn't run concurrently with itself,<a name="line.196"></a>
+<span class="sourceLineNo">197</span>  // obeying rule 2.7 and 2.11<a name="line.197"></a>
+<span class="sourceLineNo">198</span>  private final AtomicBoolean on = new AtomicBoolean(false);<a name="line.198"></a>
+<span class="sourceLineNo">199</span><a name="line.199"></a>
+<span class="sourceLineNo">200</span>   @SuppressWarnings("unchecked")<a name="line.200"></a>
+<span class="sourceLineNo">201</span>   @Override public final void run() {<a name="line.201"></a>
+<span class="sourceLineNo">202</span>    if(on.get()) { // establishes a happens-before relationship with the end of the previous run<a name="line.202"></a>
+<span class="sourceLineNo">203</span>      try {<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        final Signal s = inboundSignals.poll(); // We take a signal off the queue<a name="line.204"></a>
+<span class="sourceLineNo">205</span>        if (!done) { // If we're done, we shouldn't process any more signals, obeying rule 2.8<a name="line.205"></a>
+<span class="sourceLineNo">206</span>          // Below we simply unpack the `Signal`s and invoke the corresponding methods<a name="line.206"></a>
+<span class="sourceLineNo">207</span>          if (s instanceof OnNext&lt;?&gt;)<a name="line.207"></a>
+<span class="sourceLineNo">208</span>            handleOnNext(((OnNext&lt;T&gt;)s).next);<a name="line.208"></a>
+<span class="sourceLineNo">209</span>          else if (s instanceof OnSubscribe)<a name="line.209"></a>
+<span class="sourceLineNo">210</span>            handleOnSubscribe(((OnSubscribe)s).subscription);<a name="line.210"></a>
+<span class="sourceLineNo">211</span>          else if (s instanceof OnError) // We are always able to handle OnError, obeying rule 2.10<a name="line.211"></a>
+<span class="sourceLineNo">212</span>            handleOnError(((OnError)s).error);<a name="line.212"></a>
+<span class="sourceLineNo">213</span>          else if (s == OnComplete.Instance) // We are always able to handle OnComplete, obeying rule 2.9<a name="line.213"></a>
+<span class="sourceLineNo">214</span>            handleOnComplete();<a name="line.214"></a>
+<span class="sourceLineNo">215</span>        }<a name="line.215"></a>
+<span class="sourceLineNo">216</span>      } finally {<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        on.set(false); // establishes a happens-before relationship with the beginning of the next run<a name="line.217"></a>
+<span class="sourceLineNo">218</span>        if(!inboundSignals.isEmpty()) // If we still have signals to process<a name="line.218"></a>
+<span class="sourceLineNo">219</span>          tryScheduleToExecute(); // Then we try to schedule ourselves to execute again<a name="line.219"></a>
+<span class="sourceLineNo">220</span>      }<a name="line.220"></a>
+<span class="sourceLineNo">221</span>    }<a name="line.221"></a>
+<span class="sourceLineNo">222</span>  }<a name="line.222"></a>
+<span class="sourceLineNo">223</span><a name="line.223"></a>
+<span class="sourceLineNo">224</span>  // What `signal` does is that it sends signals to the `Subscription` asynchronously<a name="line.224"></a>
+<span class="sourceLineNo">225</span>  private void signal(final Signal signal) {<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    if (inboundSignals.offer(signal)) // No need to null-check here as ConcurrentLinkedQueue does this for us<a name="line.226"></a>
+<span class="sourceLineNo">227</span>      tryScheduleToExecute(); // Then we try to schedule it for execution, if it isn't already<a name="line.227"></a>
+<span class="sourceLineNo">228</span>  }<a name="line.228"></a>
+<span class="sourceLineNo">229</span><a name="line.229"></a>
+<span class="sourceLineNo">230</span>  // This method makes sure that this `Subscriber` is only executing on one Thread at a time<a name="line.230"></a>
+<span class="sourceLineNo">231</span>  private final void tryScheduleToExecute() {<a name="line.231"></a>
+<span class="sourceLineNo">232</span>    if(on.compareAndSet(false, true)) {<a name="line.232"></a>
+<span class="sourceLineNo">233</span>      try {<a name="line.233"></a>
+<span class="sourceLineNo">234</span>        executor.execute(this);<a name="line.234"></a>
+<span class="sourceLineNo">235</span>      } catch(Throwable t) { // If we can't run on the `Executor`, we need to fail gracefully and not violate rule 2.13<a name="line.235"></a>
+<span class="sourceLineNo">236</span>        if (!done) {<a name="line.236"></a>
+<span class="sourceLineNo">237</span>          try {<a name="line.237"></a>
+<span class="sourceLineNo">238</span>            done(); // First of all, this failure is not recoverable, so we need to cancel our subscription<a name="line.238"></a>
+<span class="sourceLineNo">239</span>          } finally {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>            inboundSignals.clear(); // We're not going to need these anymore<a name="line.240"></a>
+<span class="sourceLineNo">241</span>            // This subscription is cancelled by now, but letting the Subscriber become schedulable again means<a name="line.241"></a>
+<span class="sourceLineNo">242</span>            // that we can drain the inboundSignals queue if anything arrives after clearing<a name="line.242"></a>
+<span class="sourceLineNo">243</span>            on.set(false);<a name="line.243"></a>
+<span class="sourceLineNo">244</span>          }<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        }<a name="line.245"></a>
+<span class="sourceLineNo">246</span>      }<a name="line.246"></a>
+<span class="sourceLineNo">247</span>    }<a name="line.247"></a>
+<span class="sourceLineNo">248</span>  }<a name="line.248"></a>
+<span class="sourceLineNo">249</span>}<a name="line.249"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
