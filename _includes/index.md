@@ -2,6 +2,12 @@
 
 Reactive Streams is an initiative to provide a standard for asynchronous stream processing with non-blocking back pressure. This encompasses efforts aimed at runtime environments (JVM and JavaScript) as well as network protocols.
 
+## NEWS: JDK9 `java.util.concurrent.Flow`
+
+The interfaces available in JDK9's [java.util.concurrent.Flow](http://download.java.net/java/jdk9/docs/api/java/util/concurrent/Flow.html), are 1:1 semantically equivalent to their respective Reactive Streams counterparts. Which means that there will be a migratory period, while libraries move to adopt the new types in the JDK, however this period is expected to be short - due to the full semantic equivalence of the libraries, as well as the upcoming Reactive Streams release of a converter library as well as TCK compatible directly with the JDK types.
+
+Read [this](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.1/README.md) if you are interested in learning more about `Reactive Streams` for the JVM.
+
 ## The Problem
 
 Handling streams of data—especially “live” data whose volume is not predetermined—requires special care in an asynchronous system. The most prominent issue is that resource consumption needs to be controlled such that a fast data source does not overwhelm the stream destination. Asynchrony is needed in order to enable the parallel use of computing resources, on collaborating network hosts or multiple CPU cores within a single machine.
