@@ -4,7 +4,7 @@ Reactive Streams is an initiative to provide a standard for asynchronous stream 
 
 ## NEWS: JDK9 `java.util.concurrent.Flow`
 
-The interfaces available in JDK9's [java.util.concurrent.Flow](http://download.java.net/java/jdk9/docs/api/java/util/concurrent/Flow.html), are 1:1 semantically equivalent to their respective Reactive Streams counterparts. Which means that there will be a migratory period, while libraries move to adopt the new types in the JDK, however this period is expected to be short - due to the full semantic equivalence of the libraries, as well as the upcoming Reactive Streams release of a converter library as well as TCK compatible directly with the JDK types.
+The interfaces available in JDK9's [java.util.concurrent.Flow](https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/Flow.html), are 1:1 semantically equivalent to their respective Reactive Streams counterparts. Which means that there will be a migratory period, while libraries move to adopt the new types in the JDK, however this period is expected to be short - due to the full semantic equivalence of the libraries, as well as the upcoming Reactive Streams release of a converter library as well as TCK compatible directly with the JDK types.
 
 Read [this](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.1/README.md) if you are interested in learning more about `Reactive Streams` for the JVM.
 
