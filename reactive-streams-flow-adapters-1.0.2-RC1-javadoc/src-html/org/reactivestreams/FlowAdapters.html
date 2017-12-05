@@ -1,0 +1,453 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span><a name="line.1">/************************************************************************</a>
+<span class="sourceLineNo">002</span><a name="line.2"> * Licensed under Public Domain (CC0)                                    *</a>
+<span class="sourceLineNo">003</span><a name="line.3"> *                                                                       *</a>
+<span class="sourceLineNo">004</span><a name="line.4"> * To the extent possible under law, the person who associated CC0 with  *</a>
+<span class="sourceLineNo">005</span><a name="line.5"> * this code has waived all copyright and related or neighboring         *</a>
+<span class="sourceLineNo">006</span><a name="line.6"> * rights to this code.                                                  *</a>
+<span class="sourceLineNo">007</span><a name="line.7"> *                                                                       *</a>
+<span class="sourceLineNo">008</span><a name="line.8"> * You should have received a copy of the CC0 legalcode along with this  *</a>
+<span class="sourceLineNo">009</span><a name="line.9"> * work. If not, see &lt;http://creativecommons.org/publicdomain/zero/1.0/&gt;.*</a>
+<span class="sourceLineNo">010</span><a name="line.10"> ************************************************************************/</a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span><a name="line.12">package org.reactivestreams;</a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14">import java.util.concurrent.Flow;</a>
+<span class="sourceLineNo">015</span><a name="line.15"></a>
+<span class="sourceLineNo">016</span><a name="line.16">/**</a>
+<span class="sourceLineNo">017</span><a name="line.17"> * Bridge between Reactive Streams API and the Java 9 {@link java.util.concurrent.Flow} API.</a>
+<span class="sourceLineNo">018</span><a name="line.18"> */</a>
+<span class="sourceLineNo">019</span><a name="line.19">public final class FlowAdapters {</a>
+<span class="sourceLineNo">020</span><a name="line.20">    /** Utility class. */</a>
+<span class="sourceLineNo">021</span><a name="line.21">    private FlowAdapters() {</a>
+<span class="sourceLineNo">022</span><a name="line.22">        throw new IllegalStateException("No instances!");</a>
+<span class="sourceLineNo">023</span><a name="line.23">    }</a>
+<span class="sourceLineNo">024</span><a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25">    /**</a>
+<span class="sourceLineNo">026</span><a name="line.26">     * Converts a Flow Publisher into a Reactive Streams Publisher.</a>
+<span class="sourceLineNo">027</span><a name="line.27">     * @param &lt;T&gt; the element type</a>
+<span class="sourceLineNo">028</span><a name="line.28">     * @param flowPublisher the source Flow Publisher to convert</a>
+<span class="sourceLineNo">029</span><a name="line.29">     * @return the equivalent Reactive Streams Publisher</a>
+<span class="sourceLineNo">030</span><a name="line.30">     */</a>
+<span class="sourceLineNo">031</span><a name="line.31">    @SuppressWarnings("unchecked")</a>
+<span class="sourceLineNo">032</span><a name="line.32">    public static &lt;T&gt; org.reactivestreams.Publisher&lt;T&gt; toPublisher(</a>
+<span class="sourceLineNo">033</span><a name="line.33">            Flow.Publisher&lt;? extends T&gt; flowPublisher) {</a>
+<span class="sourceLineNo">034</span><a name="line.34">        if (flowPublisher == null) {</a>
+<span class="sourceLineNo">035</span><a name="line.35">            throw new NullPointerException("flowPublisher");</a>
+<span class="sourceLineNo">036</span><a name="line.36">        }</a>
+<span class="sourceLineNo">037</span><a name="line.37">        if (flowPublisher instanceof FlowPublisherFromReactive) {</a>
+<span class="sourceLineNo">038</span><a name="line.38">            return (org.reactivestreams.Publisher&lt;T&gt;)(((FlowPublisherFromReactive&lt;T&gt;)flowPublisher).reactiveStreams);</a>
+<span class="sourceLineNo">039</span><a name="line.39">        }</a>
+<span class="sourceLineNo">040</span><a name="line.40">        if (flowPublisher instanceof org.reactivestreams.Publisher) {</a>
+<span class="sourceLineNo">041</span><a name="line.41">            return (org.reactivestreams.Publisher&lt;T&gt;)flowPublisher;</a>
+<span class="sourceLineNo">042</span><a name="line.42">        }</a>
+<span class="sourceLineNo">043</span><a name="line.43">        return new ReactivePublisherFromFlow&lt;T&gt;(flowPublisher);</a>
+<span class="sourceLineNo">044</span><a name="line.44">    }</a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46">    /**</a>
+<span class="sourceLineNo">047</span><a name="line.47">     * Converts a Reactive Streams Publisher into a Flow Publisher.</a>
+<span class="sourceLineNo">048</span><a name="line.48">     * @param &lt;T&gt; the element type</a>
+<span class="sourceLineNo">049</span><a name="line.49">     * @param reactiveStreamsPublisher the source Reactive Streams Publisher to convert</a>
+<span class="sourceLineNo">050</span><a name="line.50">     * @return the equivalent Flow Publisher</a>
+<span class="sourceLineNo">051</span><a name="line.51">     */</a>
+<span class="sourceLineNo">052</span><a name="line.52">    @SuppressWarnings("unchecked")</a>
+<span class="sourceLineNo">053</span><a name="line.53">    public static &lt;T&gt; Flow.Publisher&lt;T&gt; toFlowPublisher(</a>
+<span class="sourceLineNo">054</span><a name="line.54">            org.reactivestreams.Publisher&lt;? extends T&gt; reactiveStreamsPublisher</a>
+<span class="sourceLineNo">055</span><a name="line.55">    ) {</a>
+<span class="sourceLineNo">056</span><a name="line.56">        if (reactiveStreamsPublisher == null) {</a>
+<span class="sourceLineNo">057</span><a name="line.57">            throw new NullPointerException("reactiveStreamsPublisher");</a>
+<span class="sourceLineNo">058</span><a name="line.58">        }</a>
+<span class="sourceLineNo">059</span><a name="line.59">        if (reactiveStreamsPublisher instanceof ReactivePublisherFromFlow) {</a>
+<span class="sourceLineNo">060</span><a name="line.60">            return (Flow.Publisher&lt;T&gt;)(((ReactivePublisherFromFlow&lt;T&gt;)reactiveStreamsPublisher).flow);</a>
+<span class="sourceLineNo">061</span><a name="line.61">        }</a>
+<span class="sourceLineNo">062</span><a name="line.62">        if (reactiveStreamsPublisher instanceof Flow.Publisher) {</a>
+<span class="sourceLineNo">063</span><a name="line.63">            return (Flow.Publisher&lt;T&gt;)reactiveStreamsPublisher;</a>
+<span class="sourceLineNo">064</span><a name="line.64">        }</a>
+<span class="sourceLineNo">065</span><a name="line.65">        return new FlowPublisherFromReactive&lt;T&gt;(reactiveStreamsPublisher);</a>
+<span class="sourceLineNo">066</span><a name="line.66">    }</a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68">    /**</a>
+<span class="sourceLineNo">069</span><a name="line.69">     * Converts a Flow Processor into a Reactive Streams Processor.</a>
+<span class="sourceLineNo">070</span><a name="line.70">     * @param &lt;T&gt; the input value type</a>
+<span class="sourceLineNo">071</span><a name="line.71">     * @param &lt;U&gt; the output value type</a>
+<span class="sourceLineNo">072</span><a name="line.72">     * @param flowProcessor the source Flow Processor to convert</a>
+<span class="sourceLineNo">073</span><a name="line.73">     * @return the equivalent Reactive Streams Processor</a>
+<span class="sourceLineNo">074</span><a name="line.74">     */</a>
+<span class="sourceLineNo">075</span><a name="line.75">    @SuppressWarnings("unchecked")</a>
+<span class="sourceLineNo">076</span><a name="line.76">    public static &lt;T, U&gt; org.reactivestreams.Processor&lt;T, U&gt; toProcessor(</a>
+<span class="sourceLineNo">077</span><a name="line.77">            Flow.Processor&lt;? super T, ? extends U&gt; flowProcessor</a>
+<span class="sourceLineNo">078</span><a name="line.78">    ) {</a>
+<span class="sourceLineNo">079</span><a name="line.79">        if (flowProcessor == null) {</a>
+<span class="sourceLineNo">080</span><a name="line.80">            throw new NullPointerException("flowProcessor");</a>
+<span class="sourceLineNo">081</span><a name="line.81">        }</a>
+<span class="sourceLineNo">082</span><a name="line.82">        if (flowProcessor instanceof FlowToReactiveProcessor) {</a>
+<span class="sourceLineNo">083</span><a name="line.83">            return (org.reactivestreams.Processor&lt;T, U&gt;)(((FlowToReactiveProcessor&lt;T, U&gt;)flowProcessor).reactiveStreams);</a>
+<span class="sourceLineNo">084</span><a name="line.84">        }</a>
+<span class="sourceLineNo">085</span><a name="line.85">        if (flowProcessor instanceof org.reactivestreams.Processor) {</a>
+<span class="sourceLineNo">086</span><a name="line.86">            return (org.reactivestreams.Processor&lt;T, U&gt;)flowProcessor;</a>
+<span class="sourceLineNo">087</span><a name="line.87">        }</a>
+<span class="sourceLineNo">088</span><a name="line.88">        return new ReactiveToFlowProcessor&lt;T, U&gt;(flowProcessor);</a>
+<span class="sourceLineNo">089</span><a name="line.89">    }</a>
+<span class="sourceLineNo">090</span><a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91">    /**</a>
+<span class="sourceLineNo">092</span><a name="line.92">     * Converts a Reactive Streams Processor into a Flow Processor.</a>
+<span class="sourceLineNo">093</span><a name="line.93">     * @param &lt;T&gt; the input value type</a>
+<span class="sourceLineNo">094</span><a name="line.94">     * @param &lt;U&gt; the output value type</a>
+<span class="sourceLineNo">095</span><a name="line.95">     * @param reactiveStreamsProcessor the source Reactive Streams Processor to convert</a>
+<span class="sourceLineNo">096</span><a name="line.96">     * @return the equivalent Flow Processor</a>
+<span class="sourceLineNo">097</span><a name="line.97">     */</a>
+<span class="sourceLineNo">098</span><a name="line.98">    @SuppressWarnings("unchecked")</a>
+<span class="sourceLineNo">099</span><a name="line.99">    public static &lt;T, U&gt; Flow.Processor&lt;T, U&gt; toFlowProcessor(</a>
+<span class="sourceLineNo">100</span><a name="line.100">            org.reactivestreams.Processor&lt;? super T, ? extends U&gt; reactiveStreamsProcessor</a>
+<span class="sourceLineNo">101</span><a name="line.101">        ) {</a>
+<span class="sourceLineNo">102</span><a name="line.102">        if (reactiveStreamsProcessor == null) {</a>
+<span class="sourceLineNo">103</span><a name="line.103">            throw new NullPointerException("reactiveStreamsProcessor");</a>
+<span class="sourceLineNo">104</span><a name="line.104">        }</a>
+<span class="sourceLineNo">105</span><a name="line.105">        if (reactiveStreamsProcessor instanceof ReactiveToFlowProcessor) {</a>
+<span class="sourceLineNo">106</span><a name="line.106">            return (Flow.Processor&lt;T, U&gt;)(((ReactiveToFlowProcessor&lt;T, U&gt;)reactiveStreamsProcessor).flow);</a>
+<span class="sourceLineNo">107</span><a name="line.107">        }</a>
+<span class="sourceLineNo">108</span><a name="line.108">        if (reactiveStreamsProcessor instanceof Flow.Processor) {</a>
+<span class="sourceLineNo">109</span><a name="line.109">            return (Flow.Processor&lt;T, U&gt;)reactiveStreamsProcessor;</a>
+<span class="sourceLineNo">110</span><a name="line.110">        }</a>
+<span class="sourceLineNo">111</span><a name="line.111">        return new FlowToReactiveProcessor&lt;T, U&gt;(reactiveStreamsProcessor);</a>
+<span class="sourceLineNo">112</span><a name="line.112">    }</a>
+<span class="sourceLineNo">113</span><a name="line.113"></a>
+<span class="sourceLineNo">114</span><a name="line.114">    /**</a>
+<span class="sourceLineNo">115</span><a name="line.115">     * Converts a Reactive Streams Subscriber into a Flow Subscriber.</a>
+<span class="sourceLineNo">116</span><a name="line.116">     * @param &lt;T&gt; the input and output value type</a>
+<span class="sourceLineNo">117</span><a name="line.117">     * @param reactiveStreamsSubscriber the Reactive Streams Subscriber instance to convert</a>
+<span class="sourceLineNo">118</span><a name="line.118">     * @return the equivalent Flow Subscriber</a>
+<span class="sourceLineNo">119</span><a name="line.119">     */</a>
+<span class="sourceLineNo">120</span><a name="line.120">    @SuppressWarnings("unchecked")</a>
+<span class="sourceLineNo">121</span><a name="line.121">    public static &lt;T&gt; Flow.Subscriber&lt;T&gt; toFlowSubscriber(org.reactivestreams.Subscriber&lt;T&gt; reactiveStreamsSubscriber) {</a>
+<span class="sourceLineNo">122</span><a name="line.122">        if (reactiveStreamsSubscriber == null) {</a>
+<span class="sourceLineNo">123</span><a name="line.123">            throw new NullPointerException("reactiveStreamsSubscriber");</a>
+<span class="sourceLineNo">124</span><a name="line.124">        }</a>
+<span class="sourceLineNo">125</span><a name="line.125">        if (reactiveStreamsSubscriber instanceof ReactiveToFlowSubscriber) {</a>
+<span class="sourceLineNo">126</span><a name="line.126">            return (Flow.Subscriber&lt;T&gt;)((ReactiveToFlowSubscriber&lt;T&gt;)reactiveStreamsSubscriber).flow;</a>
+<span class="sourceLineNo">127</span><a name="line.127">        }</a>
+<span class="sourceLineNo">128</span><a name="line.128">        if (reactiveStreamsSubscriber instanceof Flow.Subscriber) {</a>
+<span class="sourceLineNo">129</span><a name="line.129">            return (Flow.Subscriber&lt;T&gt;)reactiveStreamsSubscriber;</a>
+<span class="sourceLineNo">130</span><a name="line.130">        }</a>
+<span class="sourceLineNo">131</span><a name="line.131">        return new FlowToReactiveSubscriber&lt;T&gt;(reactiveStreamsSubscriber);</a>
+<span class="sourceLineNo">132</span><a name="line.132">    }</a>
+<span class="sourceLineNo">133</span><a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134">    /**</a>
+<span class="sourceLineNo">135</span><a name="line.135">     * Converts a Flow Subscriber into a Reactive Streams Subscriber.</a>
+<span class="sourceLineNo">136</span><a name="line.136">     * @param &lt;T&gt; the input and output value type</a>
+<span class="sourceLineNo">137</span><a name="line.137">     * @param flowSubscriber the Flow Subscriber instance to convert</a>
+<span class="sourceLineNo">138</span><a name="line.138">     * @return the equivalent Reactive Streams Subscriber</a>
+<span class="sourceLineNo">139</span><a name="line.139">     */</a>
+<span class="sourceLineNo">140</span><a name="line.140">    @SuppressWarnings("unchecked")</a>
+<span class="sourceLineNo">141</span><a name="line.141">    public static &lt;T&gt; org.reactivestreams.Subscriber&lt;T&gt; toSubscriber(Flow.Subscriber&lt;T&gt; flowSubscriber) {</a>
+<span class="sourceLineNo">142</span><a name="line.142">        if (flowSubscriber == null) {</a>
+<span class="sourceLineNo">143</span><a name="line.143">            throw new NullPointerException("flowSubscriber");</a>
+<span class="sourceLineNo">144</span><a name="line.144">        }</a>
+<span class="sourceLineNo">145</span><a name="line.145">        if (flowSubscriber instanceof FlowToReactiveSubscriber) {</a>
+<span class="sourceLineNo">146</span><a name="line.146">            return (org.reactivestreams.Subscriber&lt;T&gt;)((FlowToReactiveSubscriber&lt;T&gt;)flowSubscriber).reactiveStreams;</a>
+<span class="sourceLineNo">147</span><a name="line.147">        }</a>
+<span class="sourceLineNo">148</span><a name="line.148">        if (flowSubscriber instanceof org.reactivestreams.Subscriber) {</a>
+<span class="sourceLineNo">149</span><a name="line.149">            return (org.reactivestreams.Subscriber&lt;T&gt;)flowSubscriber;</a>
+<span class="sourceLineNo">150</span><a name="line.150">        }</a>
+<span class="sourceLineNo">151</span><a name="line.151">        return new ReactiveToFlowSubscriber&lt;T&gt;(flowSubscriber);</a>
+<span class="sourceLineNo">152</span><a name="line.152">    }</a>
+<span class="sourceLineNo">153</span><a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154">    /**</a>
+<span class="sourceLineNo">155</span><a name="line.155">     * Wraps a Reactive Streams Subscription and converts the calls to a Flow Subscription.</a>
+<span class="sourceLineNo">156</span><a name="line.156">     */</a>
+<span class="sourceLineNo">157</span><a name="line.157">    static final class FlowToReactiveSubscription implements Flow.Subscription {</a>
+<span class="sourceLineNo">158</span><a name="line.158">        final org.reactivestreams.Subscription reactiveStreams;</a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span><a name="line.160">        public FlowToReactiveSubscription(org.reactivestreams.Subscription reactive) {</a>
+<span class="sourceLineNo">161</span><a name="line.161">            this.reactiveStreams = reactive;</a>
+<span class="sourceLineNo">162</span><a name="line.162">        }</a>
+<span class="sourceLineNo">163</span><a name="line.163"></a>
+<span class="sourceLineNo">164</span><a name="line.164">        @Override</a>
+<span class="sourceLineNo">165</span><a name="line.165">        public void request(long n) {</a>
+<span class="sourceLineNo">166</span><a name="line.166">            reactiveStreams.request(n);</a>
+<span class="sourceLineNo">167</span><a name="line.167">        }</a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169">        @Override</a>
+<span class="sourceLineNo">170</span><a name="line.170">        public void cancel() {</a>
+<span class="sourceLineNo">171</span><a name="line.171">            reactiveStreams.cancel();</a>
+<span class="sourceLineNo">172</span><a name="line.172">        }</a>
+<span class="sourceLineNo">173</span><a name="line.173"></a>
+<span class="sourceLineNo">174</span><a name="line.174">    }</a>
+<span class="sourceLineNo">175</span><a name="line.175"></a>
+<span class="sourceLineNo">176</span><a name="line.176">    /**</a>
+<span class="sourceLineNo">177</span><a name="line.177">     * Wraps a Flow Subscription and converts the calls to a Reactive Streams Subscription.</a>
+<span class="sourceLineNo">178</span><a name="line.178">     */</a>
+<span class="sourceLineNo">179</span><a name="line.179">    static final class ReactiveToFlowSubscription implements org.reactivestreams.Subscription {</a>
+<span class="sourceLineNo">180</span><a name="line.180">        final Flow.Subscription flow;</a>
+<span class="sourceLineNo">181</span><a name="line.181"></a>
+<span class="sourceLineNo">182</span><a name="line.182">        public ReactiveToFlowSubscription(Flow.Subscription flow) {</a>
+<span class="sourceLineNo">183</span><a name="line.183">            this.flow = flow;</a>
+<span class="sourceLineNo">184</span><a name="line.184">        }</a>
+<span class="sourceLineNo">185</span><a name="line.185"></a>
+<span class="sourceLineNo">186</span><a name="line.186">        @Override</a>
+<span class="sourceLineNo">187</span><a name="line.187">        public void request(long n) {</a>
+<span class="sourceLineNo">188</span><a name="line.188">            flow.request(n);</a>
+<span class="sourceLineNo">189</span><a name="line.189">        }</a>
+<span class="sourceLineNo">190</span><a name="line.190"></a>
+<span class="sourceLineNo">191</span><a name="line.191">        @Override</a>
+<span class="sourceLineNo">192</span><a name="line.192">        public void cancel() {</a>
+<span class="sourceLineNo">193</span><a name="line.193">            flow.cancel();</a>
+<span class="sourceLineNo">194</span><a name="line.194">        }</a>
+<span class="sourceLineNo">195</span><a name="line.195"></a>
+<span class="sourceLineNo">196</span><a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197">    }</a>
+<span class="sourceLineNo">198</span><a name="line.198"></a>
+<span class="sourceLineNo">199</span><a name="line.199">    /**</a>
+<span class="sourceLineNo">200</span><a name="line.200">     * Wraps a Reactive Streams Subscriber and forwards methods of the Flow Subscriber to it.</a>
+<span class="sourceLineNo">201</span><a name="line.201">     * @param &lt;T&gt; the element type</a>
+<span class="sourceLineNo">202</span><a name="line.202">     */</a>
+<span class="sourceLineNo">203</span><a name="line.203">    static final class FlowToReactiveSubscriber&lt;T&gt;</a>
+<span class="sourceLineNo">204</span><a name="line.204">            implements Flow.Subscriber&lt;T&gt; {</a>
+<span class="sourceLineNo">205</span><a name="line.205">        final org.reactivestreams.Subscriber&lt;? super T&gt; reactiveStreams;</a>
+<span class="sourceLineNo">206</span><a name="line.206"></a>
+<span class="sourceLineNo">207</span><a name="line.207">        public FlowToReactiveSubscriber(org.reactivestreams.Subscriber&lt;? super T&gt; reactive) {</a>
+<span class="sourceLineNo">208</span><a name="line.208">            this.reactiveStreams = reactive;</a>
+<span class="sourceLineNo">209</span><a name="line.209">        }</a>
+<span class="sourceLineNo">210</span><a name="line.210"></a>
+<span class="sourceLineNo">211</span><a name="line.211">        @Override</a>
+<span class="sourceLineNo">212</span><a name="line.212">        public void onSubscribe(Flow.Subscription subscription) {</a>
+<span class="sourceLineNo">213</span><a name="line.213">            reactiveStreams.onSubscribe((subscription == null) ? null : new ReactiveToFlowSubscription(subscription));</a>
+<span class="sourceLineNo">214</span><a name="line.214">        }</a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span><a name="line.216">        @Override</a>
+<span class="sourceLineNo">217</span><a name="line.217">        public void onNext(T item) {</a>
+<span class="sourceLineNo">218</span><a name="line.218">            reactiveStreams.onNext(item);</a>
+<span class="sourceLineNo">219</span><a name="line.219">        }</a>
+<span class="sourceLineNo">220</span><a name="line.220"></a>
+<span class="sourceLineNo">221</span><a name="line.221">        @Override</a>
+<span class="sourceLineNo">222</span><a name="line.222">        public void onError(Throwable throwable) {</a>
+<span class="sourceLineNo">223</span><a name="line.223">            reactiveStreams.onError(throwable);</a>
+<span class="sourceLineNo">224</span><a name="line.224">        }</a>
+<span class="sourceLineNo">225</span><a name="line.225"></a>
+<span class="sourceLineNo">226</span><a name="line.226">        @Override</a>
+<span class="sourceLineNo">227</span><a name="line.227">        public void onComplete() {</a>
+<span class="sourceLineNo">228</span><a name="line.228">            reactiveStreams.onComplete();</a>
+<span class="sourceLineNo">229</span><a name="line.229">        }</a>
+<span class="sourceLineNo">230</span><a name="line.230"></a>
+<span class="sourceLineNo">231</span><a name="line.231">    }</a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span><a name="line.233">    /**</a>
+<span class="sourceLineNo">234</span><a name="line.234">     * Wraps a Reactive Streams Subscriber and forwards methods of the Flow Subscriber to it.</a>
+<span class="sourceLineNo">235</span><a name="line.235">     * @param &lt;T&gt; the element type</a>
+<span class="sourceLineNo">236</span><a name="line.236">     */</a>
+<span class="sourceLineNo">237</span><a name="line.237">    static final class ReactiveToFlowSubscriber&lt;T&gt;</a>
+<span class="sourceLineNo">238</span><a name="line.238">            implements org.reactivestreams.Subscriber&lt;T&gt; {</a>
+<span class="sourceLineNo">239</span><a name="line.239">        final Flow.Subscriber&lt;? super T&gt; flow;</a>
+<span class="sourceLineNo">240</span><a name="line.240"></a>
+<span class="sourceLineNo">241</span><a name="line.241">        public ReactiveToFlowSubscriber(Flow.Subscriber&lt;? super T&gt; flow) {</a>
+<span class="sourceLineNo">242</span><a name="line.242">            this.flow = flow;</a>
+<span class="sourceLineNo">243</span><a name="line.243">        }</a>
+<span class="sourceLineNo">244</span><a name="line.244"></a>
+<span class="sourceLineNo">245</span><a name="line.245">        @Override</a>
+<span class="sourceLineNo">246</span><a name="line.246">        public void onSubscribe(org.reactivestreams.Subscription subscription) {</a>
+<span class="sourceLineNo">247</span><a name="line.247">            flow.onSubscribe((subscription == null) ? null : new FlowToReactiveSubscription(subscription));</a>
+<span class="sourceLineNo">248</span><a name="line.248">        }</a>
+<span class="sourceLineNo">249</span><a name="line.249"></a>
+<span class="sourceLineNo">250</span><a name="line.250">        @Override</a>
+<span class="sourceLineNo">251</span><a name="line.251">        public void onNext(T item) {</a>
+<span class="sourceLineNo">252</span><a name="line.252">            flow.onNext(item);</a>
+<span class="sourceLineNo">253</span><a name="line.253">        }</a>
+<span class="sourceLineNo">254</span><a name="line.254"></a>
+<span class="sourceLineNo">255</span><a name="line.255">        @Override</a>
+<span class="sourceLineNo">256</span><a name="line.256">        public void onError(Throwable throwable) {</a>
+<span class="sourceLineNo">257</span><a name="line.257">            flow.onError(throwable);</a>
+<span class="sourceLineNo">258</span><a name="line.258">        }</a>
+<span class="sourceLineNo">259</span><a name="line.259"></a>
+<span class="sourceLineNo">260</span><a name="line.260">        @Override</a>
+<span class="sourceLineNo">261</span><a name="line.261">        public void onComplete() {</a>
+<span class="sourceLineNo">262</span><a name="line.262">            flow.onComplete();</a>
+<span class="sourceLineNo">263</span><a name="line.263">        }</a>
+<span class="sourceLineNo">264</span><a name="line.264"></a>
+<span class="sourceLineNo">265</span><a name="line.265">    }</a>
+<span class="sourceLineNo">266</span><a name="line.266"></a>
+<span class="sourceLineNo">267</span><a name="line.267">    /**</a>
+<span class="sourceLineNo">268</span><a name="line.268">     * Wraps a Flow Processor and forwards methods of the Reactive Streams Processor to it.</a>
+<span class="sourceLineNo">269</span><a name="line.269">     * @param &lt;T&gt; the input type</a>
+<span class="sourceLineNo">270</span><a name="line.270">     * @param &lt;U&gt; the output type</a>
+<span class="sourceLineNo">271</span><a name="line.271">     */</a>
+<span class="sourceLineNo">272</span><a name="line.272">    static final class ReactiveToFlowProcessor&lt;T, U&gt;</a>
+<span class="sourceLineNo">273</span><a name="line.273">            implements org.reactivestreams.Processor&lt;T, U&gt; {</a>
+<span class="sourceLineNo">274</span><a name="line.274">        final Flow.Processor&lt;? super T, ? extends U&gt; flow;</a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span><a name="line.276">        public ReactiveToFlowProcessor(Flow.Processor&lt;? super T, ? extends U&gt; flow) {</a>
+<span class="sourceLineNo">277</span><a name="line.277">            this.flow = flow;</a>
+<span class="sourceLineNo">278</span><a name="line.278">        }</a>
+<span class="sourceLineNo">279</span><a name="line.279"></a>
+<span class="sourceLineNo">280</span><a name="line.280">        @Override</a>
+<span class="sourceLineNo">281</span><a name="line.281">        public void onSubscribe(org.reactivestreams.Subscription subscription) {</a>
+<span class="sourceLineNo">282</span><a name="line.282">            flow.onSubscribe((subscription == null) ? null : new FlowToReactiveSubscription(subscription));</a>
+<span class="sourceLineNo">283</span><a name="line.283">        }</a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span><a name="line.285">        @Override</a>
+<span class="sourceLineNo">286</span><a name="line.286">        public void onNext(T t) {</a>
+<span class="sourceLineNo">287</span><a name="line.287">            flow.onNext(t);</a>
+<span class="sourceLineNo">288</span><a name="line.288">        }</a>
+<span class="sourceLineNo">289</span><a name="line.289"></a>
+<span class="sourceLineNo">290</span><a name="line.290">        @Override</a>
+<span class="sourceLineNo">291</span><a name="line.291">        public void onError(Throwable t) {</a>
+<span class="sourceLineNo">292</span><a name="line.292">            flow.onError(t);</a>
+<span class="sourceLineNo">293</span><a name="line.293">        }</a>
+<span class="sourceLineNo">294</span><a name="line.294"></a>
+<span class="sourceLineNo">295</span><a name="line.295">        @Override</a>
+<span class="sourceLineNo">296</span><a name="line.296">        public void onComplete() {</a>
+<span class="sourceLineNo">297</span><a name="line.297">            flow.onComplete();</a>
+<span class="sourceLineNo">298</span><a name="line.298">        }</a>
+<span class="sourceLineNo">299</span><a name="line.299"></a>
+<span class="sourceLineNo">300</span><a name="line.300">        @Override</a>
+<span class="sourceLineNo">301</span><a name="line.301">        public void subscribe(org.reactivestreams.Subscriber&lt;? super U&gt; s) {</a>
+<span class="sourceLineNo">302</span><a name="line.302">            flow.subscribe((s == null) ? null : new FlowToReactiveSubscriber&lt;U&gt;(s));</a>
+<span class="sourceLineNo">303</span><a name="line.303">        }</a>
+<span class="sourceLineNo">304</span><a name="line.304">    }</a>
+<span class="sourceLineNo">305</span><a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306">    /**</a>
+<span class="sourceLineNo">307</span><a name="line.307">     * Wraps a Reactive Streams Processor and forwards methods of the Flow Processor to it.</a>
+<span class="sourceLineNo">308</span><a name="line.308">     * @param &lt;T&gt; the input type</a>
+<span class="sourceLineNo">309</span><a name="line.309">     * @param &lt;U&gt; the output type</a>
+<span class="sourceLineNo">310</span><a name="line.310">     */</a>
+<span class="sourceLineNo">311</span><a name="line.311">    static final class FlowToReactiveProcessor&lt;T, U&gt;</a>
+<span class="sourceLineNo">312</span><a name="line.312">            implements Flow.Processor&lt;T, U&gt; {</a>
+<span class="sourceLineNo">313</span><a name="line.313">        final org.reactivestreams.Processor&lt;? super T, ? extends U&gt; reactiveStreams;</a>
+<span class="sourceLineNo">314</span><a name="line.314"></a>
+<span class="sourceLineNo">315</span><a name="line.315">        public FlowToReactiveProcessor(org.reactivestreams.Processor&lt;? super T, ? extends U&gt; reactive) {</a>
+<span class="sourceLineNo">316</span><a name="line.316">            this.reactiveStreams = reactive;</a>
+<span class="sourceLineNo">317</span><a name="line.317">        }</a>
+<span class="sourceLineNo">318</span><a name="line.318"></a>
+<span class="sourceLineNo">319</span><a name="line.319">        @Override</a>
+<span class="sourceLineNo">320</span><a name="line.320">        public void onSubscribe(Flow.Subscription subscription) {</a>
+<span class="sourceLineNo">321</span><a name="line.321">            reactiveStreams.onSubscribe((subscription == null) ? null : new ReactiveToFlowSubscription(subscription));</a>
+<span class="sourceLineNo">322</span><a name="line.322">        }</a>
+<span class="sourceLineNo">323</span><a name="line.323"></a>
+<span class="sourceLineNo">324</span><a name="line.324">        @Override</a>
+<span class="sourceLineNo">325</span><a name="line.325">        public void onNext(T t) {</a>
+<span class="sourceLineNo">326</span><a name="line.326">            reactiveStreams.onNext(t);</a>
+<span class="sourceLineNo">327</span><a name="line.327">        }</a>
+<span class="sourceLineNo">328</span><a name="line.328"></a>
+<span class="sourceLineNo">329</span><a name="line.329">        @Override</a>
+<span class="sourceLineNo">330</span><a name="line.330">        public void onError(Throwable t) {</a>
+<span class="sourceLineNo">331</span><a name="line.331">            reactiveStreams.onError(t);</a>
+<span class="sourceLineNo">332</span><a name="line.332">        }</a>
+<span class="sourceLineNo">333</span><a name="line.333"></a>
+<span class="sourceLineNo">334</span><a name="line.334">        @Override</a>
+<span class="sourceLineNo">335</span><a name="line.335">        public void onComplete() {</a>
+<span class="sourceLineNo">336</span><a name="line.336">            reactiveStreams.onComplete();</a>
+<span class="sourceLineNo">337</span><a name="line.337">        }</a>
+<span class="sourceLineNo">338</span><a name="line.338"></a>
+<span class="sourceLineNo">339</span><a name="line.339">        @Override</a>
+<span class="sourceLineNo">340</span><a name="line.340">        public void subscribe(Flow.Subscriber&lt;? super U&gt; s) {</a>
+<span class="sourceLineNo">341</span><a name="line.341">            reactiveStreams.subscribe((s == null) ? null : new ReactiveToFlowSubscriber&lt;U&gt;(s));</a>
+<span class="sourceLineNo">342</span><a name="line.342">        }</a>
+<span class="sourceLineNo">343</span><a name="line.343">    }</a>
+<span class="sourceLineNo">344</span><a name="line.344"></a>
+<span class="sourceLineNo">345</span><a name="line.345">    /**</a>
+<span class="sourceLineNo">346</span><a name="line.346">     * Reactive Streams Publisher that wraps a Flow Publisher.</a>
+<span class="sourceLineNo">347</span><a name="line.347">     * @param &lt;T&gt; the element type</a>
+<span class="sourceLineNo">348</span><a name="line.348">     */</a>
+<span class="sourceLineNo">349</span><a name="line.349">    static final class ReactivePublisherFromFlow&lt;T&gt; implements org.reactivestreams.Publisher&lt;T&gt; {</a>
+<span class="sourceLineNo">350</span><a name="line.350"></a>
+<span class="sourceLineNo">351</span><a name="line.351">        final Flow.Publisher&lt;? extends T&gt; flow;</a>
+<span class="sourceLineNo">352</span><a name="line.352"></a>
+<span class="sourceLineNo">353</span><a name="line.353">        public ReactivePublisherFromFlow(Flow.Publisher&lt;? extends T&gt; flowPublisher) {</a>
+<span class="sourceLineNo">354</span><a name="line.354">            this.flow = flowPublisher;</a>
+<span class="sourceLineNo">355</span><a name="line.355">        }</a>
+<span class="sourceLineNo">356</span><a name="line.356"></a>
+<span class="sourceLineNo">357</span><a name="line.357">        @Override</a>
+<span class="sourceLineNo">358</span><a name="line.358">        public void subscribe(org.reactivestreams.Subscriber&lt;? super T&gt; reactive) {</a>
+<span class="sourceLineNo">359</span><a name="line.359">            flow.subscribe((reactive == null) ? null : new FlowToReactiveSubscriber&lt;T&gt;(reactive));</a>
+<span class="sourceLineNo">360</span><a name="line.360">        }</a>
+<span class="sourceLineNo">361</span><a name="line.361">    }</a>
+<span class="sourceLineNo">362</span><a name="line.362"></a>
+<span class="sourceLineNo">363</span><a name="line.363">    /**</a>
+<span class="sourceLineNo">364</span><a name="line.364">     * Flow Publisher that wraps a Reactive Streams Publisher.</a>
+<span class="sourceLineNo">365</span><a name="line.365">     * @param &lt;T&gt; the element type</a>
+<span class="sourceLineNo">366</span><a name="line.366">     */</a>
+<span class="sourceLineNo">367</span><a name="line.367">    static final class FlowPublisherFromReactive&lt;T&gt; implements Flow.Publisher&lt;T&gt; {</a>
+<span class="sourceLineNo">368</span><a name="line.368"></a>
+<span class="sourceLineNo">369</span><a name="line.369">        final org.reactivestreams.Publisher&lt;? extends T&gt; reactiveStreams;</a>
+<span class="sourceLineNo">370</span><a name="line.370"></a>
+<span class="sourceLineNo">371</span><a name="line.371">        public FlowPublisherFromReactive(org.reactivestreams.Publisher&lt;? extends T&gt; reactivePublisher) {</a>
+<span class="sourceLineNo">372</span><a name="line.372">            this.reactiveStreams = reactivePublisher;</a>
+<span class="sourceLineNo">373</span><a name="line.373">        }</a>
+<span class="sourceLineNo">374</span><a name="line.374"></a>
+<span class="sourceLineNo">375</span><a name="line.375">        @Override</a>
+<span class="sourceLineNo">376</span><a name="line.376">        public void subscribe(Flow.Subscriber&lt;? super T&gt; flow) {</a>
+<span class="sourceLineNo">377</span><a name="line.377">            reactiveStreams.subscribe((flow == null) ? null : new ReactiveToFlowSubscriber&lt;T&gt;(flow));</a>
+<span class="sourceLineNo">378</span><a name="line.378">        }</a>
+<span class="sourceLineNo">379</span><a name="line.379">    }</a>
+<span class="sourceLineNo">380</span><a name="line.380"></a>
+<span class="sourceLineNo">381</span><a name="line.381">}</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
