@@ -1,0 +1,718 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span><a name="line.1">/************************************************************************</a>
+<span class="sourceLineNo">002</span><a name="line.2"> * Licensed under Public Domain (CC0)                                    *</a>
+<span class="sourceLineNo">003</span><a name="line.3"> *                                                                       *</a>
+<span class="sourceLineNo">004</span><a name="line.4"> * To the extent possible under law, the person who associated CC0 with  *</a>
+<span class="sourceLineNo">005</span><a name="line.5"> * this code has waived all copyright and related or neighboring         *</a>
+<span class="sourceLineNo">006</span><a name="line.6"> * rights to this code.                                                  *</a>
+<span class="sourceLineNo">007</span><a name="line.7"> *                                                                       *</a>
+<span class="sourceLineNo">008</span><a name="line.8"> * You should have received a copy of the CC0 legalcode along with this  *</a>
+<span class="sourceLineNo">009</span><a name="line.9"> * work. If not, see &lt;http://creativecommons.org/publicdomain/zero/1.0/&gt;.*</a>
+<span class="sourceLineNo">010</span><a name="line.10"> ************************************************************************/</a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span><a name="line.12">package org.reactivestreams.tck.flow.support;</a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14">/**</a>
+<span class="sourceLineNo">015</span><a name="line.15"> * Internal TCK use only.</a>
+<span class="sourceLineNo">016</span><a name="line.16"> * Add / Remove tests for PublisherVerification here to make sure that they arre added/removed in the other places.</a>
+<span class="sourceLineNo">017</span><a name="line.17"> */</a>
+<span class="sourceLineNo">018</span><a name="line.18">public interface PublisherVerificationRules {</a>
+<span class="sourceLineNo">019</span><a name="line.19">  /**</a>
+<span class="sourceLineNo">020</span><a name="line.20">   * Validates that the override of {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()}</a>
+<span class="sourceLineNo">021</span><a name="line.21">   * returns a non-negative value.</a>
+<span class="sourceLineNo">022</span><a name="line.22">   */</a>
+<span class="sourceLineNo">023</span><a name="line.23">  void required_validate_maxElementsFromPublisher() throws Exception;</a>
+<span class="sourceLineNo">024</span><a name="line.24">  /**</a>
+<span class="sourceLineNo">025</span><a name="line.25">   * Validates that the override of {@link org.reactivestreams.tck.PublisherVerification#boundedDepthOfOnNextAndRequestRecursion()}</a>
+<span class="sourceLineNo">026</span><a name="line.26">   * returns a positive value.</a>
+<span class="sourceLineNo">027</span><a name="line.27">   */</a>
+<span class="sourceLineNo">028</span><a name="line.28">  void required_validate_boundedDepthOfOnNextAndRequestRecursion() throws Exception;</a>
+<span class="sourceLineNo">029</span><a name="line.29">  /**</a>
+<span class="sourceLineNo">030</span><a name="line.30">   * Asks for a {@code Publisher} that should emit exactly one item and complete (both within a</a>
+<span class="sourceLineNo">031</span><a name="line.31">   * timeout specified by {@link org.reactivestreams.tck.TestEnvironment#defaultTimeoutMillis()})</a>
+<span class="sourceLineNo">032</span><a name="line.32">   * in response to a request(1).</a>
+<span class="sourceLineNo">033</span><a name="line.33">   * &lt;p&gt;</a>
+<span class="sourceLineNo">034</span><a name="line.34">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} returns zero.</a>
+<span class="sourceLineNo">035</span><a name="line.35">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">036</span><a name="line.36">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">037</span><a name="line.37">   * &lt;li&gt;the {@code Publisher.subscribe(Subscriber)} method has actual implementation,&lt;/li&gt;</a>
+<span class="sourceLineNo">038</span><a name="line.38">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, if there is an upstream {@code Publisher},</a>
+<span class="sourceLineNo">039</span><a name="line.39">   * that {@code Publisher} is actually subscribed to,&lt;/li&gt;</a>
+<span class="sourceLineNo">040</span><a name="line.40">   * &lt;li&gt;if the {@code Publisher} is part of a chain, all elements actually issue a {@code request()} call</a>
+<span class="sourceLineNo">041</span><a name="line.41">   * in response to the test subscriber or by default to their upstream,&lt;/li&gt;</a>
+<span class="sourceLineNo">042</span><a name="line.42">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, the {@code Subscriber.onSubscribe} is called</a>
+<span class="sourceLineNo">043</span><a name="line.43">   * as part of the preparation process (usually before subscribing to other {@code Publisher}s),&lt;/li&gt;</a>
+<span class="sourceLineNo">044</span><a name="line.44">   * &lt;li&gt;if the {@code Publisher} implementation works for a consumer that calls {@code request(1)},&lt;/li&gt;</a>
+<span class="sourceLineNo">045</span><a name="line.45">   * &lt;li&gt;if the {@code Publisher} implementation is able to emit an {@code onComplete} without requests,&lt;/li&gt;</a>
+<span class="sourceLineNo">046</span><a name="line.46">   * &lt;li&gt;that the {@code Publisher} implementation does not emit more than the allowed elements (exactly one).&lt;/li&gt;</a>
+<span class="sourceLineNo">047</span><a name="line.47">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">048</span><a name="line.48">   */</a>
+<span class="sourceLineNo">049</span><a name="line.49">  void required_createPublisher1MustProduceAStreamOfExactly1Element() throws Throwable;</a>
+<span class="sourceLineNo">050</span><a name="line.50">  /**</a>
+<span class="sourceLineNo">051</span><a name="line.51">   * Asks for a {@code Publisher} that should emit exactly three items and complete (all within a</a>
+<span class="sourceLineNo">052</span><a name="line.52">   * timeout specified by {@link org.reactivestreams.tck.TestEnvironment#defaultTimeoutMillis()}).</a>
+<span class="sourceLineNo">053</span><a name="line.53">   * &lt;p&gt;</a>
+<span class="sourceLineNo">054</span><a name="line.54">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">055</span><a name="line.55">   * &lt;p&gt;</a>
+<span class="sourceLineNo">056</span><a name="line.56">   * The tests requests one-by-one and verifies each single response item arrives in time.</a>
+<span class="sourceLineNo">057</span><a name="line.57">   * &lt;p&gt;</a>
+<span class="sourceLineNo">058</span><a name="line.58">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">059</span><a name="line.59">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">060</span><a name="line.60">   * &lt;li&gt;the {@code Publisher.subscribe(Subscriber)} method has actual implementation,&lt;/li&gt;</a>
+<span class="sourceLineNo">061</span><a name="line.61">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, if there is an upstream {@code Publisher},</a>
+<span class="sourceLineNo">062</span><a name="line.62">   * that {@code Publisher} is actually subscribed to,&lt;/li&gt;</a>
+<span class="sourceLineNo">063</span><a name="line.63">   * &lt;li&gt;if the {@code Publisher} is part of a chain, all elements actually issue a {@code request()} call</a>
+<span class="sourceLineNo">064</span><a name="line.64">   * in response to the test subscriber or by default to their upstream,&lt;/li&gt;</a>
+<span class="sourceLineNo">065</span><a name="line.65">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, the {@code Subscriber.onSubscribe} is called</a>
+<span class="sourceLineNo">066</span><a name="line.66">   * as part of the preparation process (usually before subscribing to other {@code Publisher}s),&lt;/li&gt;</a>
+<span class="sourceLineNo">067</span><a name="line.67">   * &lt;li&gt;if the {@code Publisher} implementation works for a subscriber that calls {@code request(1)} after consuming an item,&lt;/li&gt;</a>
+<span class="sourceLineNo">068</span><a name="line.68">   * &lt;li&gt;if the {@code Publisher} implementation is able to emit an {@code onComplete} without requests.&lt;/li&gt; </a>
+<span class="sourceLineNo">069</span><a name="line.69">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">070</span><a name="line.70">   */</a>
+<span class="sourceLineNo">071</span><a name="line.71">  void required_createPublisher3MustProduceAStreamOfExactly3Elements() throws Throwable;</a>
+<span class="sourceLineNo">072</span><a name="line.72">  /**</a>
+<span class="sourceLineNo">073</span><a name="line.73">   * Asks for a {@code Publisher} that responds to a request pattern of 0 (not requesting upfront), 1, 1 and 2</a>
+<span class="sourceLineNo">074</span><a name="line.74">   * in a timely manner.</a>
+<span class="sourceLineNo">075</span><a name="line.75">   * &lt;p&gt;</a>
+<span class="sourceLineNo">076</span><a name="line.76">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.1'&gt;1.1&lt;/a&gt;</a>
+<span class="sourceLineNo">077</span><a name="line.77">   * &lt;p&gt;</a>
+<span class="sourceLineNo">078</span><a name="line.78">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 5.</a>
+<span class="sourceLineNo">079</span><a name="line.79">   * &lt;p&gt;</a>
+<span class="sourceLineNo">080</span><a name="line.80">   * This test ensures that the {@code Publisher} implementation correctly responds to {@code request()} calls that in</a>
+<span class="sourceLineNo">081</span><a name="line.81">   * total are less than the number of elements this {@code Publisher} could emit (thus the completion event won't be emitted).</a>
+<span class="sourceLineNo">082</span><a name="line.82">   * &lt;p&gt;</a>
+<span class="sourceLineNo">083</span><a name="line.83">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">084</span><a name="line.84">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">085</span><a name="line.85">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">086</span><a name="line.86">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">087</span><a name="line.87">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">088</span><a name="line.88">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">089</span><a name="line.89">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">090</span><a name="line.90">   */</a>
+<span class="sourceLineNo">091</span><a name="line.91">  void required_spec101_subscriptionRequestMustResultInTheCorrectNumberOfProducedElements() throws Throwable;</a>
+<span class="sourceLineNo">092</span><a name="line.92">  /**</a>
+<span class="sourceLineNo">093</span><a name="line.93">   * Asks for a short {@code Publisher} and verifies that requesting once and with more than the length (but bounded) results in the</a>
+<span class="sourceLineNo">094</span><a name="line.94">   * correct number of items to be emitted (i.e., length 3 and request 10) followed by an {@code onComplete} signal. </a>
+<span class="sourceLineNo">095</span><a name="line.95">   * &lt;p&gt;</a>
+<span class="sourceLineNo">096</span><a name="line.96">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.2'&gt;1.2&lt;/a&gt;</a>
+<span class="sourceLineNo">097</span><a name="line.97">   * &lt;p&gt;</a>
+<span class="sourceLineNo">098</span><a name="line.98">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">099</span><a name="line.99">   * &lt;p&gt;</a>
+<span class="sourceLineNo">100</span><a name="line.100">   * This test ensures that the {@code Publisher} implementation can deal with larger requests than the number of items it can produce.</a>
+<span class="sourceLineNo">101</span><a name="line.101">   * &lt;p&gt;</a>
+<span class="sourceLineNo">102</span><a name="line.102">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">103</span><a name="line.103">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">104</span><a name="line.104">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">105</span><a name="line.105">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass.&lt;/li&gt;</a>
+<span class="sourceLineNo">106</span><a name="line.106">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">107</span><a name="line.107">   */</a>
+<span class="sourceLineNo">108</span><a name="line.108">  void required_spec102_maySignalLessThanRequestedAndTerminateSubscription() throws Throwable;</a>
+<span class="sourceLineNo">109</span><a name="line.109">  /**</a>
+<span class="sourceLineNo">110</span><a name="line.110">   * Asks for a short {@code Publisher} (i.e., length 10), repeatedly subscribes to this {@code Publisher}, requests items</a>
+<span class="sourceLineNo">111</span><a name="line.111">   * one by one and verifies the {@code Publisher} calls the {@code onXXX} methods non-overlappingly.</a>
+<span class="sourceLineNo">112</span><a name="line.112">   * &lt;p&gt;</a>
+<span class="sourceLineNo">113</span><a name="line.113">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.3'&gt;1.3&lt;/a&gt;</a>
+<span class="sourceLineNo">114</span><a name="line.114">   * &lt;p&gt;</a>
+<span class="sourceLineNo">115</span><a name="line.115">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 10.</a>
+<span class="sourceLineNo">116</span><a name="line.116">   * &lt;p&gt;</a>
+<span class="sourceLineNo">117</span><a name="line.117">   * Note that this test is probabilistic, that is, may not capture any concurrent invocation in a {code Publisher} implementation.</a>
+<span class="sourceLineNo">118</span><a name="line.118">   * Note also that this test is sensitive to cases when a {@code request()} call in {@code onSubscribe()} triggers an asynchronous</a>
+<span class="sourceLineNo">119</span><a name="line.119">   * call to the other {@code onXXX} methods. In contrast, the test allows synchronous call chain of </a>
+<span class="sourceLineNo">120</span><a name="line.120">   * {@code onSubscribe -&gt; request -&gt; onNext}.</a>
+<span class="sourceLineNo">121</span><a name="line.121">   * &lt;p&gt;</a>
+<span class="sourceLineNo">122</span><a name="line.122">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">123</span><a name="line.123">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">124</span><a name="line.124">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">125</span><a name="line.125">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">126</span><a name="line.126">   * &lt;li&gt;if a {@code request()} call from {@code onSubscribe()} could trigger an asynchronous call to {@code onNext()} and if so, make sure</a>
+<span class="sourceLineNo">127</span><a name="line.127">   * such {@code request()} calls are deferred until the call to {@code onSubscribe()} returns normally.&lt;/li&gt;</a>
+<span class="sourceLineNo">128</span><a name="line.128">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">129</span><a name="line.129">   */</a>
+<span class="sourceLineNo">130</span><a name="line.130">  void stochastic_spec103_mustSignalOnMethodsSequentially() throws Throwable;</a>
+<span class="sourceLineNo">131</span><a name="line.131">  /**</a>
+<span class="sourceLineNo">132</span><a name="line.132">   * Asks for an error {@code Publisher} that should call {@code onSubscribe} exactly once </a>
+<span class="sourceLineNo">133</span><a name="line.133">   * followed by a single call to {@code onError()} without receiving any requests and otherwise</a>
+<span class="sourceLineNo">134</span><a name="line.134">   * not throwing any exception.</a>
+<span class="sourceLineNo">135</span><a name="line.135">   * &lt;p&gt;</a>
+<span class="sourceLineNo">136</span><a name="line.136">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.4'&gt;1.4&lt;/a&gt;</a>
+<span class="sourceLineNo">137</span><a name="line.137">   * &lt;p&gt;</a>
+<span class="sourceLineNo">138</span><a name="line.138">   * The test is not executed if {@code PublisherVerification.createErrorPublisher()} returns null.</a>
+<span class="sourceLineNo">139</span><a name="line.139">   * &lt;p&gt;</a>
+<span class="sourceLineNo">140</span><a name="line.140">   * If this test fails, the following could be checked within the error {@code Publisher} implementation:</a>
+<span class="sourceLineNo">141</span><a name="line.141">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">142</span><a name="line.142">   * &lt;li&gt;the {@code Publisher.subscribe(Subscriber)} method has actual implementation,&lt;/li&gt;</a>
+<span class="sourceLineNo">143</span><a name="line.143">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, if there is an upstream {@code Publisher},</a>
+<span class="sourceLineNo">144</span><a name="line.144">   * that {@code Publisher} is actually subscribed to,&lt;/li&gt;</a>
+<span class="sourceLineNo">145</span><a name="line.145">   * &lt;li&gt;if the {@code Publisher} implementation does signal an {@code onSubscribe} before signalling {@code onError},&lt;/li&gt; </a>
+<span class="sourceLineNo">146</span><a name="line.146">   * &lt;li&gt;if the {@code Publisher} implementation is able to emit an {@code onError} without requests,&lt;/li&gt; </a>
+<span class="sourceLineNo">147</span><a name="line.147">   * &lt;li&gt;if the {@code Publisher} is non-empty as this test requires a {@code Publisher} to signal an</a>
+<span class="sourceLineNo">148</span><a name="line.148">   * {@code onError} eagerly.&lt;/li&gt; </a>
+<span class="sourceLineNo">149</span><a name="line.149">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">150</span><a name="line.150">   */</a>
+<span class="sourceLineNo">151</span><a name="line.151">  void optional_spec104_mustSignalOnErrorWhenFails() throws Throwable;</a>
+<span class="sourceLineNo">152</span><a name="line.152">  /**</a>
+<span class="sourceLineNo">153</span><a name="line.153">   * Asks for a short {@code Publisher} (i.e., length 3) and verifies, after requesting one by one, the sequence</a>
+<span class="sourceLineNo">154</span><a name="line.154">   * completes normally.</a>
+<span class="sourceLineNo">155</span><a name="line.155">   * &lt;p&gt;</a>
+<span class="sourceLineNo">156</span><a name="line.156">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.5'&gt;1.5&lt;/a&gt;</a>
+<span class="sourceLineNo">157</span><a name="line.157">   * &lt;p&gt;</a>
+<span class="sourceLineNo">158</span><a name="line.158">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">159</span><a name="line.159">   * &lt;p&gt;</a>
+<span class="sourceLineNo">160</span><a name="line.160">   * Note that the tests requests 1 after the items have been received and before expecting an {@code onComplete} signal.</a>
+<span class="sourceLineNo">161</span><a name="line.161">   * &lt;p&gt;</a>
+<span class="sourceLineNo">162</span><a name="line.162">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">163</span><a name="line.163">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">164</span><a name="line.164">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">165</span><a name="line.165">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">166</span><a name="line.166">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">167</span><a name="line.167">   */</a>
+<span class="sourceLineNo">168</span><a name="line.168">  void required_spec105_mustSignalOnCompleteWhenFiniteStreamTerminates() throws Throwable;</a>
+<span class="sourceLineNo">169</span><a name="line.169">  /**</a>
+<span class="sourceLineNo">170</span><a name="line.170">   * Asks for an empty {@code Publisher} (i.e., length 0) and verifies it completes in a timely manner.</a>
+<span class="sourceLineNo">171</span><a name="line.171">   * &lt;p&gt;</a>
+<span class="sourceLineNo">172</span><a name="line.172">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.5'&gt;1.5&lt;/a&gt;</a>
+<span class="sourceLineNo">173</span><a name="line.173">   * &lt;p&gt;</a>
+<span class="sourceLineNo">174</span><a name="line.174">   * Note that the tests requests 1 before expecting an {@code onComplete} signal.</a>
+<span class="sourceLineNo">175</span><a name="line.175">   * &lt;p&gt;</a>
+<span class="sourceLineNo">176</span><a name="line.176">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">177</span><a name="line.177">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">178</span><a name="line.178">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">179</span><a name="line.179">   * &lt;li&gt;if the {@code Publisher} is non-empty as this test requires a {@code Publisher} without items.&lt;/li&gt; </a>
+<span class="sourceLineNo">180</span><a name="line.180">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">181</span><a name="line.181">   */</a>
+<span class="sourceLineNo">182</span><a name="line.182">  void optional_spec105_emptyStreamMustTerminateBySignallingOnComplete() throws Throwable;</a>
+<span class="sourceLineNo">183</span><a name="line.183">  /**</a>
+<span class="sourceLineNo">184</span><a name="line.184">   * Currently, this test is skipped because it is unclear this rule can be effectively checked</a>
+<span class="sourceLineNo">185</span><a name="line.185">   * on a {@code Publisher} instance without looking into or hooking into the implementation of it.</a>
+<span class="sourceLineNo">186</span><a name="line.186">   * &lt;p&gt;</a>
+<span class="sourceLineNo">187</span><a name="line.187">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.6'&gt;1.6&lt;/a&gt;</a>
+<span class="sourceLineNo">188</span><a name="line.188">   */</a>
+<span class="sourceLineNo">189</span><a name="line.189">  void untested_spec106_mustConsiderSubscriptionCancelledAfterOnErrorOrOnCompleteHasBeenCalled() throws Throwable;</a>
+<span class="sourceLineNo">190</span><a name="line.190">  /**</a>
+<span class="sourceLineNo">191</span><a name="line.191">   * Asks for a single-element {@code Publisher} and checks if requesting after the terminal event doesn't</a>
+<span class="sourceLineNo">192</span><a name="line.192">   * lead to more items or terminal signals to be emitted.</a>
+<span class="sourceLineNo">193</span><a name="line.193">   * &lt;p&gt;</a>
+<span class="sourceLineNo">194</span><a name="line.194">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.7'&gt;1.7&lt;/a&gt;</a>
+<span class="sourceLineNo">195</span><a name="line.195">   * &lt;p&gt;</a>
+<span class="sourceLineNo">196</span><a name="line.196">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 1.</a>
+<span class="sourceLineNo">197</span><a name="line.197">   * &lt;p&gt;</a>
+<span class="sourceLineNo">198</span><a name="line.198">   * The tests requests more items than the expected {@code Publisher} length upfront and some more items after its completion.</a>
+<span class="sourceLineNo">199</span><a name="line.199">   * &lt;p&gt;</a>
+<span class="sourceLineNo">200</span><a name="line.200">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">201</span><a name="line.201">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">202</span><a name="line.202">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">203</span><a name="line.203">   * &lt;li&gt;the indication for the terminal state is properly persisted and a request call can't trigger emission of more items or another</a>
+<span class="sourceLineNo">204</span><a name="line.204">   * terminal signal.&lt;/li&gt;</a>
+<span class="sourceLineNo">205</span><a name="line.205">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">206</span><a name="line.206">   */</a>
+<span class="sourceLineNo">207</span><a name="line.207">  void required_spec107_mustNotEmitFurtherSignalsOnceOnCompleteHasBeenSignalled() throws Throwable;</a>
+<span class="sourceLineNo">208</span><a name="line.208">  /**</a>
+<span class="sourceLineNo">209</span><a name="line.209">   * Currently, this test is skipped, although it is possible to validate an error {@code Publisher} along</a>
+<span class="sourceLineNo">210</span><a name="line.210">   * the same lines as {@link #required_spec107_mustNotEmitFurtherSignalsOnceOnCompleteHasBeenSignalled()}.</a>
+<span class="sourceLineNo">211</span><a name="line.211">   * &lt;p&gt;</a>
+<span class="sourceLineNo">212</span><a name="line.212">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.7'&gt;1.7&lt;/a&gt;</a>
+<span class="sourceLineNo">213</span><a name="line.213">   */</a>
+<span class="sourceLineNo">214</span><a name="line.214">  void untested_spec107_mustNotEmitFurtherSignalsOnceOnErrorHasBeenSignalled() throws Throwable;</a>
+<span class="sourceLineNo">215</span><a name="line.215">  /**</a>
+<span class="sourceLineNo">216</span><a name="line.216">   * Currently, this test is skipped because there was no agreement on how to verify its "eventually" requirement.</a>
+<span class="sourceLineNo">217</span><a name="line.217">   * &lt;p&gt;</a>
+<span class="sourceLineNo">218</span><a name="line.218">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.8'&gt;1.8&lt;/a&gt;</a>
+<span class="sourceLineNo">219</span><a name="line.219">   */</a>
+<span class="sourceLineNo">220</span><a name="line.220">  void untested_spec108_possiblyCanceledSubscriptionShouldNotReceiveOnErrorOrOnCompleteSignals() throws Throwable;</a>
+<span class="sourceLineNo">221</span><a name="line.221">  /**</a>
+<span class="sourceLineNo">222</span><a name="line.222">   * Asks for an empty {@code Publisher} and verifies if {@code onSubscribe} signal was emitted before</a>
+<span class="sourceLineNo">223</span><a name="line.223">   * any other {@code onNext}, {@code onError} or {@code onComplete} signal.</a>
+<span class="sourceLineNo">224</span><a name="line.224">   * &lt;p&gt;</a>
+<span class="sourceLineNo">225</span><a name="line.225">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.9'&gt;1.9&lt;/a&gt;</a>
+<span class="sourceLineNo">226</span><a name="line.226">   * &lt;p&gt;</a>
+<span class="sourceLineNo">227</span><a name="line.227">   * Note that this test doesn't request anything, however, an {@code onNext} is not considered as a failure.</a>
+<span class="sourceLineNo">228</span><a name="line.228">   * &lt;p&gt;</a>
+<span class="sourceLineNo">229</span><a name="line.229">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">230</span><a name="line.230">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">231</span><a name="line.231">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">232</span><a name="line.232">   * &lt;li&gt;the {@code Publisher.subscribe(Subscriber)} method has actual implementation,&lt;/li&gt;</a>
+<span class="sourceLineNo">233</span><a name="line.233">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, if there is an upstream {@code Publisher},</a>
+<span class="sourceLineNo">234</span><a name="line.234">   * that {@code Publisher} is actually subscribed to,&lt;/li&gt;</a>
+<span class="sourceLineNo">235</span><a name="line.235">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, the {@code Subscriber.onSubscribe} is called</a>
+<span class="sourceLineNo">236</span><a name="line.236">   * as part of the preparation process (usually before subscribing to other {@code Publisher}s).&lt;/li&gt;</a>
+<span class="sourceLineNo">237</span><a name="line.237">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">238</span><a name="line.238">   */</a>
+<span class="sourceLineNo">239</span><a name="line.239">  void required_spec109_mustIssueOnSubscribeForNonNullSubscriber() throws Throwable;</a>
+<span class="sourceLineNo">240</span><a name="line.240">  /**</a>
+<span class="sourceLineNo">241</span><a name="line.241">   * Currently, this test is skipped because there is no common agreement on what is to be considered a fatal exception and</a>
+<span class="sourceLineNo">242</span><a name="line.242">   * besides, {@code Publisher.subscribe} is only allowed throw a {@code NullPointerException} and any other</a>
+<span class="sourceLineNo">243</span><a name="line.243">   * exception would require looking into or hooking into the implementation of the {@code Publisher}.</a>
+<span class="sourceLineNo">244</span><a name="line.244">   * &lt;p&gt;</a>
+<span class="sourceLineNo">245</span><a name="line.245">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.9'&gt;1.9&lt;/a&gt;</a>
+<span class="sourceLineNo">246</span><a name="line.246">   */</a>
+<span class="sourceLineNo">247</span><a name="line.247">  void untested_spec109_subscribeShouldNotThrowNonFatalThrowable() throws Throwable;</a>
+<span class="sourceLineNo">248</span><a name="line.248">  /**</a>
+<span class="sourceLineNo">249</span><a name="line.249">   * Asks for an empty {@code Publisher} and calls {@code subscribe} on it with {@code null} that should result in</a>
+<span class="sourceLineNo">250</span><a name="line.250">   * a {@code NullPointerException} to be thrown.</a>
+<span class="sourceLineNo">251</span><a name="line.251">   * &lt;p&gt;</a>
+<span class="sourceLineNo">252</span><a name="line.252">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.9'&gt;1.9&lt;/a&gt;</a>
+<span class="sourceLineNo">253</span><a name="line.253">   * &lt;p&gt;</a>
+<span class="sourceLineNo">254</span><a name="line.254">   * If this test fails, check if the {@code subscribe()} implementation has an explicit null check (or a method dereference</a>
+<span class="sourceLineNo">255</span><a name="line.255">   * on the {@code Subscriber}), especially if the incoming {@code Subscriber} is wrapped or stored to be used later.</a>
+<span class="sourceLineNo">256</span><a name="line.256">   */</a>
+<span class="sourceLineNo">257</span><a name="line.257">  void required_spec109_subscribeThrowNPEOnNullSubscriber() throws Throwable;</a>
+<span class="sourceLineNo">258</span><a name="line.258">  /**</a>
+<span class="sourceLineNo">259</span><a name="line.259">   * Asks for an error {@code Publisher} that should call {@code onSubscribe} exactly once </a>
+<span class="sourceLineNo">260</span><a name="line.260">   * followed by a single call to {@code onError()} without receiving any requests.</a>
+<span class="sourceLineNo">261</span><a name="line.261">   * &lt;p&gt;</a>
+<span class="sourceLineNo">262</span><a name="line.262">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.9'&gt;1.9&lt;/a&gt;</a>
+<span class="sourceLineNo">263</span><a name="line.263">   * &lt;p&gt;</a>
+<span class="sourceLineNo">264</span><a name="line.264">   * The test is not executed if {@code PublisherVerification.createErrorPublisher()} returns null.</a>
+<span class="sourceLineNo">265</span><a name="line.265">   * &lt;p&gt;</a>
+<span class="sourceLineNo">266</span><a name="line.266">   * The difference between this test and {@link #optional_spec104_mustSignalOnErrorWhenFails()} is that there is</a>
+<span class="sourceLineNo">267</span><a name="line.267">   * no explicit verification if exceptions were thrown in addition to the regular {@code onSubscribe+onError} signal pair.</a>
+<span class="sourceLineNo">268</span><a name="line.268">   * &lt;p&gt;</a>
+<span class="sourceLineNo">269</span><a name="line.269">   * If this test fails, the following could be checked within the error {@code Publisher} implementation:</a>
+<span class="sourceLineNo">270</span><a name="line.270">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">271</span><a name="line.271">   * &lt;li&gt;the {@code Publisher.subscribe(Subscriber)} method has actual implementation,&lt;/li&gt;</a>
+<span class="sourceLineNo">272</span><a name="line.272">   * &lt;li&gt;in the {@code Publisher.subscribe(Subscriber)} method, if there is an upstream {@code Publisher},</a>
+<span class="sourceLineNo">273</span><a name="line.273">   * that {@code Publisher} is actually subscribed to,&lt;/li&gt;</a>
+<span class="sourceLineNo">274</span><a name="line.274">   * &lt;li&gt;if the {@code Publisher} implementation is able to emit an {@code onError} without requests,&lt;/li&gt; </a>
+<span class="sourceLineNo">275</span><a name="line.275">   * &lt;li&gt;if the {@code Publisher} is non-empty as this test expects a {@code Publisher} without items.&lt;/li&gt; </a>
+<span class="sourceLineNo">276</span><a name="line.276">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">277</span><a name="line.277">   */</a>
+<span class="sourceLineNo">278</span><a name="line.278">  void required_spec109_mayRejectCallsToSubscribeIfPublisherIsUnableOrUnwillingToServeThemRejectionMustTriggerOnErrorAfterOnSubscribe() throws Throwable;</a>
+<span class="sourceLineNo">279</span><a name="line.279">  /**</a>
+<span class="sourceLineNo">280</span><a name="line.280">   * Currently, this test is skipped because enforcing rule §1.10 requires unlimited retention and reference-equal checks on</a>
+<span class="sourceLineNo">281</span><a name="line.281">   * all incoming {@code Subscriber} which is generally infeasible, plus reusing the same {@code Subscriber} instance is</a>
+<span class="sourceLineNo">282</span><a name="line.282">   * better detected (or ignored) inside {@code Subscriber.onSubscribe} when the method is called multiple times. </a>
+<span class="sourceLineNo">283</span><a name="line.283">   * &lt;p&gt;</a>
+<span class="sourceLineNo">284</span><a name="line.284">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.10'&gt;1.10&lt;/a&gt;</a>
+<span class="sourceLineNo">285</span><a name="line.285">   */</a>
+<span class="sourceLineNo">286</span><a name="line.286">  void untested_spec110_rejectASubscriptionRequestIfTheSameSubscriberSubscribesTwice() throws Throwable;</a>
+<span class="sourceLineNo">287</span><a name="line.287">  /**</a>
+<span class="sourceLineNo">288</span><a name="line.288">   * Asks for a single-element {@code Publisher} and subscribes to it twice, without consuming with either</a>
+<span class="sourceLineNo">289</span><a name="line.289">   * {@code Subscriber} instance</a>
+<span class="sourceLineNo">290</span><a name="line.290">   * (i.e., no requests are issued).</a>
+<span class="sourceLineNo">291</span><a name="line.291">   * &lt;p&gt;</a>
+<span class="sourceLineNo">292</span><a name="line.292">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.11'&gt;1.11&lt;/a&gt;</a>
+<span class="sourceLineNo">293</span><a name="line.293">   * &lt;p&gt;</a>
+<span class="sourceLineNo">294</span><a name="line.294">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 1.</a>
+<span class="sourceLineNo">295</span><a name="line.295">   * &lt;p&gt;</a>
+<span class="sourceLineNo">296</span><a name="line.296">   * Note that this test ignores what signals the {@code Publisher} emits. Any exception thrown through non-regular</a>
+<span class="sourceLineNo">297</span><a name="line.297">   * means will indicate a skipped test.</a>
+<span class="sourceLineNo">298</span><a name="line.298">   */</a>
+<span class="sourceLineNo">299</span><a name="line.299">  void optional_spec111_maySupportMultiSubscribe() throws Throwable;</a>
+<span class="sourceLineNo">300</span><a name="line.300">  /**</a>
+<span class="sourceLineNo">301</span><a name="line.301">   * Asks for a single-element {@code Publisher} and subscribes to it twice.</a>
+<span class="sourceLineNo">302</span><a name="line.302">   * Each {@code Subscriber} requests for 1 element and checks if onNext or onComplete signals was received.</a>
+<span class="sourceLineNo">303</span><a name="line.303">   * &lt;p&gt;</a>
+<span class="sourceLineNo">304</span><a name="line.304">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.11'&gt;1.11&lt;/a&gt;,</a>
+<span class="sourceLineNo">305</span><a name="line.305">   * and depends on valid implementation of rule &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.5'&gt;1.5&lt;/a&gt;</a>
+<span class="sourceLineNo">306</span><a name="line.306">   * in order to verify this.</a>
+<span class="sourceLineNo">307</span><a name="line.307">   * &lt;p&gt;</a>
+<span class="sourceLineNo">308</span><a name="line.308">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 1.</a>
+<span class="sourceLineNo">309</span><a name="line.309">   * &lt;p&gt;</a>
+<span class="sourceLineNo">310</span><a name="line.310">   * Any exception thrown through non-regular means will indicate a skipped test.</a>
+<span class="sourceLineNo">311</span><a name="line.311">   */</a>
+<span class="sourceLineNo">312</span><a name="line.312">  void optional_spec111_registeredSubscribersMustReceiveOnNextOrOnCompleteSignals() throws Throwable;</a>
+<span class="sourceLineNo">313</span><a name="line.313">  /**</a>
+<span class="sourceLineNo">314</span><a name="line.314">   * Asks for a short {@code Publisher} (length 5), subscribes 3 {@code Subscriber}s to it, requests with different</a>
+<span class="sourceLineNo">315</span><a name="line.315">   * patterns and checks if all 3 received the same events in the same order.</a>
+<span class="sourceLineNo">316</span><a name="line.316">   * &lt;p&gt;</a>
+<span class="sourceLineNo">317</span><a name="line.317">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.11'&gt;1.11&lt;/a&gt;</a>
+<span class="sourceLineNo">318</span><a name="line.318">   * &lt;p&gt;</a>
+<span class="sourceLineNo">319</span><a name="line.319">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 5.</a>
+<span class="sourceLineNo">320</span><a name="line.320">   * &lt;p&gt;</a>
+<span class="sourceLineNo">321</span><a name="line.321">   * The request pattern for the first {@code Subscriber} is (1, 1, 2, 1); for the second is (2, 3) and for the third is (3, 1, 1).</a>
+<span class="sourceLineNo">322</span><a name="line.322">   * &lt;p&gt;</a>
+<span class="sourceLineNo">323</span><a name="line.323">   * Note that this test requires a {@code Publisher} that always emits the same signals to any {@code Subscriber}, regardless of</a>
+<span class="sourceLineNo">324</span><a name="line.324">   * when they subscribe and how they request elements. I.e., a "live" {@code Publisher} emitting the current time would not pass this test.</a>
+<span class="sourceLineNo">325</span><a name="line.325">   * &lt;p&gt;</a>
+<span class="sourceLineNo">326</span><a name="line.326">   * Note that this test is optional and may appear skipped even if the behavior should be actually supported by the {@code Publisher},</a>
+<span class="sourceLineNo">327</span><a name="line.327">   * see the skip message for an indication of this.</a>
+<span class="sourceLineNo">328</span><a name="line.328">   * &lt;p&gt;</a>
+<span class="sourceLineNo">329</span><a name="line.329">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">330</span><a name="line.330">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">331</span><a name="line.331">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">332</span><a name="line.332">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">333</span><a name="line.333">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">334</span><a name="line.334">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">335</span><a name="line.335">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">336</span><a name="line.336">   */</a>
+<span class="sourceLineNo">337</span><a name="line.337">  void optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingOneByOne() throws Throwable;</a>
+<span class="sourceLineNo">338</span><a name="line.338">  /**</a>
+<span class="sourceLineNo">339</span><a name="line.339">   * Asks for a short {@code Publisher} (length 3), subscribes 3 {@code Subscriber}s to it, requests more than the length items</a>
+<span class="sourceLineNo">340</span><a name="line.340">   * upfront with each and verifies they all received the same items in the same order (but does not verify they all complete).</a>
+<span class="sourceLineNo">341</span><a name="line.341">   * &lt;p&gt;</a>
+<span class="sourceLineNo">342</span><a name="line.342">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.11'&gt;1.11&lt;/a&gt;</a>
+<span class="sourceLineNo">343</span><a name="line.343">   * &lt;p&gt;</a>
+<span class="sourceLineNo">344</span><a name="line.344">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">345</span><a name="line.345">   * &lt;p&gt;</a>
+<span class="sourceLineNo">346</span><a name="line.346">   * Note that this test requires a {@code Publisher} that always emits the same signals to any {@code Subscriber}, regardless of</a>
+<span class="sourceLineNo">347</span><a name="line.347">   * when they subscribe and how they request elements. I.e., a "live" {@code Publisher} emitting the current time would not pass this test.</a>
+<span class="sourceLineNo">348</span><a name="line.348">   * &lt;p&gt;</a>
+<span class="sourceLineNo">349</span><a name="line.349">   * Note that this test is optional and may appear skipped even if the behavior should be actually supported by the {@code Publisher},</a>
+<span class="sourceLineNo">350</span><a name="line.350">   * see the skip message for an indication of this. </a>
+<span class="sourceLineNo">351</span><a name="line.351">   * &lt;p&gt;</a>
+<span class="sourceLineNo">352</span><a name="line.352">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">353</span><a name="line.353">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">354</span><a name="line.354">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">355</span><a name="line.355">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">356</span><a name="line.356">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">357</span><a name="line.357">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">358</span><a name="line.358">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">359</span><a name="line.359">   */</a>
+<span class="sourceLineNo">360</span><a name="line.360">  void optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfront() throws Throwable;</a>
+<span class="sourceLineNo">361</span><a name="line.361">  /**</a>
+<span class="sourceLineNo">362</span><a name="line.362">   * Asks for a short {@code Publisher} (length 3), subscribes 3 {@code Subscriber}s to it, requests more than the length items</a>
+<span class="sourceLineNo">363</span><a name="line.363">   * upfront with each and verifies they all received the same items in the same order followed by an {@code onComplete} signal.</a>
+<span class="sourceLineNo">364</span><a name="line.364">   * &lt;p&gt;</a>
+<span class="sourceLineNo">365</span><a name="line.365">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#1.11'&gt;1.11&lt;/a&gt;</a>
+<span class="sourceLineNo">366</span><a name="line.366">   * &lt;p&gt;</a>
+<span class="sourceLineNo">367</span><a name="line.367">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">368</span><a name="line.368">   * &lt;p&gt;</a>
+<span class="sourceLineNo">369</span><a name="line.369">   * Note that this test requires a {@code Publisher} that always emits the same signals to any {@code Subscriber}, regardless of</a>
+<span class="sourceLineNo">370</span><a name="line.370">   * when they subscribe and how they request elements. I.e., a "live" {@code Publisher} emitting the current time would not pass this test.</a>
+<span class="sourceLineNo">371</span><a name="line.371">   * &lt;p&gt;</a>
+<span class="sourceLineNo">372</span><a name="line.372">   * Note that this test is optional and may appear skipped even if the behavior should be actually supported by the {@code Publisher},</a>
+<span class="sourceLineNo">373</span><a name="line.373">   * see the skip message for an indication of this. </a>
+<span class="sourceLineNo">374</span><a name="line.374">   * &lt;p&gt;</a>
+<span class="sourceLineNo">375</span><a name="line.375">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">376</span><a name="line.376">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">377</span><a name="line.377">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">378</span><a name="line.378">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">379</span><a name="line.379">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">380</span><a name="line.380">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">381</span><a name="line.381">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">382</span><a name="line.382">   */</a>
+<span class="sourceLineNo">383</span><a name="line.383">  void optional_spec111_multicast_mustProduceTheSameElementsInTheSameSequenceToAllOfItsSubscribersWhenRequestingManyUpfrontAndCompleteAsExpected() throws Throwable;</a>
+<span class="sourceLineNo">384</span><a name="line.384">  /**</a>
+<span class="sourceLineNo">385</span><a name="line.385">   * Asks for a short {@code Publisher} (length 6), requests several times from within {@code onSubscribe} and then requests</a>
+<span class="sourceLineNo">386</span><a name="line.386">   * one-by-one from {@code onNext}.</a>
+<span class="sourceLineNo">387</span><a name="line.387">   * &lt;p&gt;</a>
+<span class="sourceLineNo">388</span><a name="line.388">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.2'&gt;3.2&lt;/a&gt;</a>
+<span class="sourceLineNo">389</span><a name="line.389">   * &lt;p&gt;</a>
+<span class="sourceLineNo">390</span><a name="line.390">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 6.</a>
+<span class="sourceLineNo">391</span><a name="line.391">   * &lt;p&gt;</a>
+<span class="sourceLineNo">392</span><a name="line.392">   * The request pattern is 3 x 1 from within {@code onSubscribe} and one from within each {@code onNext} invocation.</a>
+<span class="sourceLineNo">393</span><a name="line.393">   * &lt;p&gt;</a>
+<span class="sourceLineNo">394</span><a name="line.394">   * The test consumes the {@code Publisher} but otherwise doesn't verify the {@code Publisher} completes (however, it checks</a>
+<span class="sourceLineNo">395</span><a name="line.395">   * for errors).</a>
+<span class="sourceLineNo">396</span><a name="line.396">   * &lt;p&gt;</a>
+<span class="sourceLineNo">397</span><a name="line.397">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">398</span><a name="line.398">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">399</span><a name="line.399">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">400</span><a name="line.400">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">401</span><a name="line.401">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">402</span><a name="line.402">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">403</span><a name="line.403">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">404</span><a name="line.404">   */</a>
+<span class="sourceLineNo">405</span><a name="line.405">  void required_spec302_mustAllowSynchronousRequestCallsFromOnNextAndOnSubscribe() throws Throwable;</a>
+<span class="sourceLineNo">406</span><a name="line.406">  /**</a>
+<span class="sourceLineNo">407</span><a name="line.407">   * Asks for a {@code Publisher} with length equal to the value returned by {@link #required_validate_boundedDepthOfOnNextAndRequestRecursion()} plus 1,</a>
+<span class="sourceLineNo">408</span><a name="line.408">   * calls {@code request(1)} externally and then from within {@code onNext} and checks if the stack depth did not increase beyond the</a>
+<span class="sourceLineNo">409</span><a name="line.409">   * amount permitted by {@link #required_validate_boundedDepthOfOnNextAndRequestRecursion()}.</a>
+<span class="sourceLineNo">410</span><a name="line.410">   * &lt;p&gt;</a>
+<span class="sourceLineNo">411</span><a name="line.411">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.3'&gt;3.3&lt;/a&gt;</a>
+<span class="sourceLineNo">412</span><a name="line.412">   * &lt;p&gt;</a>
+<span class="sourceLineNo">413</span><a name="line.413">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than </a>
+<span class="sourceLineNo">414</span><a name="line.414">   * {@link #required_validate_boundedDepthOfOnNextAndRequestRecursion()} plus 1.</a>
+<span class="sourceLineNo">415</span><a name="line.415">   * &lt;p&gt;</a>
+<span class="sourceLineNo">416</span><a name="line.416">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">417</span><a name="line.417">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">418</span><a name="line.418">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">419</span><a name="line.419">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">420</span><a name="line.420">   * &lt;li&gt;the implementation doesn't allow unbounded recursion when {@code request()} is called from within {@code onNext}, i.e., the lack of</a>
+<span class="sourceLineNo">421</span><a name="line.421">   * reentrant-safe state machine around the request amount (such as a for loop with a bound on the parameter {@code n} that calls {@code onNext}).</a>
+<span class="sourceLineNo">422</span><a name="line.422">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">423</span><a name="line.423">   */</a>
+<span class="sourceLineNo">424</span><a name="line.424">  void required_spec303_mustNotAllowUnboundedRecursion() throws Throwable;</a>
+<span class="sourceLineNo">425</span><a name="line.425">  /**</a>
+<span class="sourceLineNo">426</span><a name="line.426">   * Currently, this test is skipped because a {@code request} could enter into a synchronous computation via {@code onNext}</a>
+<span class="sourceLineNo">427</span><a name="line.427">   * legally and otherwise there is no common agreement how to detect such heavy computation reliably.</a>
+<span class="sourceLineNo">428</span><a name="line.428">   * &lt;p&gt;</a>
+<span class="sourceLineNo">429</span><a name="line.429">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.4'&gt;3.4&lt;/a&gt;</a>
+<span class="sourceLineNo">430</span><a name="line.430">   */</a>
+<span class="sourceLineNo">431</span><a name="line.431">  void untested_spec304_requestShouldNotPerformHeavyComputations() throws Exception;</a>
+<span class="sourceLineNo">432</span><a name="line.432">  /**</a>
+<span class="sourceLineNo">433</span><a name="line.433">   * Currently, this test is skipped because there is no reliable agreed upon way to detect a heavy computation.</a>
+<span class="sourceLineNo">434</span><a name="line.434">   * &lt;p&gt;</a>
+<span class="sourceLineNo">435</span><a name="line.435">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.5'&gt;3.5&lt;/a&gt;</a>
+<span class="sourceLineNo">436</span><a name="line.436">   */</a>
+<span class="sourceLineNo">437</span><a name="line.437">  void untested_spec305_cancelMustNotSynchronouslyPerformHeavyComputation() throws Exception;</a>
+<span class="sourceLineNo">438</span><a name="line.438">  /**</a>
+<span class="sourceLineNo">439</span><a name="line.439">   * Asks for a short {@code Publisher} (length 3) and verifies that cancelling without requesting anything, then requesting</a>
+<span class="sourceLineNo">440</span><a name="line.440">   * items should result in no signals to be emitted.</a>
+<span class="sourceLineNo">441</span><a name="line.441">   * &lt;p&gt;</a>
+<span class="sourceLineNo">442</span><a name="line.442">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.6'&gt;3.6&lt;/a&gt;</a>
+<span class="sourceLineNo">443</span><a name="line.443">   * &lt;p&gt;</a>
+<span class="sourceLineNo">444</span><a name="line.444">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">445</span><a name="line.445">   * &lt;p&gt;</a>
+<span class="sourceLineNo">446</span><a name="line.446">   * The post-cancellation request pattern is (1, 1, 1).</a>
+<span class="sourceLineNo">447</span><a name="line.447">   * &lt;p&gt;</a>
+<span class="sourceLineNo">448</span><a name="line.448">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">449</span><a name="line.449">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">450</span><a name="line.450">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">451</span><a name="line.451">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">452</span><a name="line.452">   * &lt;li&gt;the cancellation indicator flag is properly persisted (may require volatile) and checked as part of the signal emission process.&lt;/li&gt;</a>
+<span class="sourceLineNo">453</span><a name="line.453">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">454</span><a name="line.454">   */</a>
+<span class="sourceLineNo">455</span><a name="line.455">  void required_spec306_afterSubscriptionIsCancelledRequestMustBeNops() throws Throwable;</a>
+<span class="sourceLineNo">456</span><a name="line.456">  /**</a>
+<span class="sourceLineNo">457</span><a name="line.457">   * Asks for a single-element {@code Publisher} and verifies that without requesting anything, cancelling the sequence</a>
+<span class="sourceLineNo">458</span><a name="line.458">   * multiple times should result in no signals to be emitted and should result in an thrown exception. </a>
+<span class="sourceLineNo">459</span><a name="line.459">   * &lt;p&gt;</a>
+<span class="sourceLineNo">460</span><a name="line.460">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.7'&gt;3.7&lt;/a&gt;</a>
+<span class="sourceLineNo">461</span><a name="line.461">   * &lt;p&gt;</a>
+<span class="sourceLineNo">462</span><a name="line.462">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 1.</a>
+<span class="sourceLineNo">463</span><a name="line.463">   * &lt;p&gt;</a>
+<span class="sourceLineNo">464</span><a name="line.464">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">465</span><a name="line.465">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">466</span><a name="line.466">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">467</span><a name="line.467">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">468</span><a name="line.468">   * &lt;li&gt;the cancellation indicator flag is properly persisted (may require volatile) and checked as part of the signal emission process.&lt;/li&gt;</a>
+<span class="sourceLineNo">469</span><a name="line.469">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">470</span><a name="line.470">   */</a>
+<span class="sourceLineNo">471</span><a name="line.471">  void required_spec307_afterSubscriptionIsCancelledAdditionalCancelationsMustBeNops() throws Throwable;</a>
+<span class="sourceLineNo">472</span><a name="line.472">  /**</a>
+<span class="sourceLineNo">473</span><a name="line.473">   * Asks for a short {@code Publisher} (length 10) and issues a {@code request(0)} which should trigger an {@code onError} call</a>
+<span class="sourceLineNo">474</span><a name="line.474">   * with an {@code IllegalArgumentException}.</a>
+<span class="sourceLineNo">475</span><a name="line.475">   * &lt;p&gt;</a>
+<span class="sourceLineNo">476</span><a name="line.476">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.9'&gt;3.9&lt;/a&gt;</a>
+<span class="sourceLineNo">477</span><a name="line.477">   * &lt;p&gt;</a>
+<span class="sourceLineNo">478</span><a name="line.478">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 10.</a>
+<span class="sourceLineNo">479</span><a name="line.479">   * &lt;p&gt;</a>
+<span class="sourceLineNo">480</span><a name="line.480">   * Note that this test expects the {@code IllegalArgumentException} being signalled through {@code onError}, not by</a>
+<span class="sourceLineNo">481</span><a name="line.481">   * throwing from {@code request()} (which is also forbidden) or signalling the error by any other means (i.e., through the</a>
+<span class="sourceLineNo">482</span><a name="line.482">   * {@code Thread.currentThread().getUncaughtExceptionHandler()} for example).</a>
+<span class="sourceLineNo">483</span><a name="line.483">   * &lt;p&gt;</a>
+<span class="sourceLineNo">484</span><a name="line.484">   * Note also that requesting and emission may happen concurrently and honoring this rule may require extra coordination within</a>
+<span class="sourceLineNo">485</span><a name="line.485">   * the {@code Publisher}.</a>
+<span class="sourceLineNo">486</span><a name="line.486">   * &lt;p&gt;</a>
+<span class="sourceLineNo">487</span><a name="line.487">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">488</span><a name="line.488">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">489</span><a name="line.489">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">490</span><a name="line.490">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">491</span><a name="line.491">   * &lt;li&gt;the {@code Publisher} can emit an {@code onError} in this particular case, even if there was no prior and legal</a>
+<span class="sourceLineNo">492</span><a name="line.492">   * {@code request} call and even if the {@code Publisher} would like to emit items first before emitting an {@code onError}</a>
+<span class="sourceLineNo">493</span><a name="line.493">   * in general.</a>
+<span class="sourceLineNo">494</span><a name="line.494">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">495</span><a name="line.495">   */</a>
+<span class="sourceLineNo">496</span><a name="line.496">  void required_spec309_requestZeroMustSignalIllegalArgumentException() throws Throwable;</a>
+<span class="sourceLineNo">497</span><a name="line.497">  /**</a>
+<span class="sourceLineNo">498</span><a name="line.498">   * Asks for a short {@code Publisher} (length 10) and issues a random, negative {@code request()} call which should </a>
+<span class="sourceLineNo">499</span><a name="line.499">   * trigger an {@code onError} call with an {@code IllegalArgumentException}. </a>
+<span class="sourceLineNo">500</span><a name="line.500">   * &lt;p&gt;</a>
+<span class="sourceLineNo">501</span><a name="line.501">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.9'&gt;3.9&lt;/a&gt;</a>
+<span class="sourceLineNo">502</span><a name="line.502">   * &lt;p&gt;</a>
+<span class="sourceLineNo">503</span><a name="line.503">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 10.</a>
+<span class="sourceLineNo">504</span><a name="line.504">   * &lt;p&gt;</a>
+<span class="sourceLineNo">505</span><a name="line.505">   * Note that this test expects the {@code IllegalArgumentException} being signalled through {@code onError}, not by</a>
+<span class="sourceLineNo">506</span><a name="line.506">   * throwing from {@code request()} (which is also forbidden) or signalling the error by any other means (i.e., through the</a>
+<span class="sourceLineNo">507</span><a name="line.507">   * {@code Thread.currentThread().getUncaughtExceptionHandler()} for example).</a>
+<span class="sourceLineNo">508</span><a name="line.508">   * &lt;p&gt;</a>
+<span class="sourceLineNo">509</span><a name="line.509">   * Note also that requesting and emission may happen concurrently and honoring this rule may require extra coordination within</a>
+<span class="sourceLineNo">510</span><a name="line.510">   * the {@code Publisher}.</a>
+<span class="sourceLineNo">511</span><a name="line.511">   * &lt;p&gt;</a>
+<span class="sourceLineNo">512</span><a name="line.512">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">513</span><a name="line.513">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">514</span><a name="line.514">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">515</span><a name="line.515">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">516</span><a name="line.516">   * &lt;li&gt;the {@code Publisher} can emit an {@code onError} in this particular case, even if there was no prior and legal</a>
+<span class="sourceLineNo">517</span><a name="line.517">   * {@code request} call and even if the {@code Publisher} would like to emit items first before emitting an {@code onError}</a>
+<span class="sourceLineNo">518</span><a name="line.518">   * in general.</a>
+<span class="sourceLineNo">519</span><a name="line.519">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">520</span><a name="line.520">   */</a>
+<span class="sourceLineNo">521</span><a name="line.521">  void required_spec309_requestNegativeNumberMustSignalIllegalArgumentException() throws Throwable;</a>
+<span class="sourceLineNo">522</span><a name="line.522">  /**</a>
+<span class="sourceLineNo">523</span><a name="line.523">   * Asks for a short {@code Publisher} (length 10) and issues a random, negative {@code request()} call which should </a>
+<span class="sourceLineNo">524</span><a name="line.524">   * trigger an {@code onError} call with an {@code IllegalArgumentException}. </a>
+<span class="sourceLineNo">525</span><a name="line.525">   * &lt;p&gt;</a>
+<span class="sourceLineNo">526</span><a name="line.526">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.9'&gt;3.9&lt;/a&gt;</a>
+<span class="sourceLineNo">527</span><a name="line.527">   * &lt;p&gt;</a>
+<span class="sourceLineNo">528</span><a name="line.528">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 10.</a>
+<span class="sourceLineNo">529</span><a name="line.529">   * &lt;p&gt;</a>
+<span class="sourceLineNo">530</span><a name="line.530">   * Note that this test expects the {@code IllegalArgumentException} being signalled through {@code onError}, not by</a>
+<span class="sourceLineNo">531</span><a name="line.531">   * throwing from {@code request()} (which is also forbidden) or signalling the error by any other means (i.e., through the</a>
+<span class="sourceLineNo">532</span><a name="line.532">   * {@code Thread.currentThread().getUncaughtExceptionHandler()} for example).</a>
+<span class="sourceLineNo">533</span><a name="line.533">   * &lt;p&gt;</a>
+<span class="sourceLineNo">534</span><a name="line.534">   * Note also that requesting and emission may happen concurrently and honoring this rule may require extra coordination within</a>
+<span class="sourceLineNo">535</span><a name="line.535">   * the {@code Publisher}.</a>
+<span class="sourceLineNo">536</span><a name="line.536">   * &lt;p&gt;</a>
+<span class="sourceLineNo">537</span><a name="line.537">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">538</span><a name="line.538">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">539</span><a name="line.539">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">540</span><a name="line.540">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">541</span><a name="line.541">   * &lt;li&gt;the {@code Publisher} can emit an {@code onError} in this particular case, even if there was no prior and legal</a>
+<span class="sourceLineNo">542</span><a name="line.542">   * {@code request} call and even if the {@code Publisher} would like to emit items first before emitting an {@code onError}</a>
+<span class="sourceLineNo">543</span><a name="line.543">   * in general.</a>
+<span class="sourceLineNo">544</span><a name="line.544">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">545</span><a name="line.545">   */</a>
+<span class="sourceLineNo">546</span><a name="line.546">  void optional_spec309_requestNegativeNumberMaySignalIllegalArgumentExceptionWithSpecificMessage() throws Throwable;</a>
+<span class="sourceLineNo">547</span><a name="line.547">  /**</a>
+<span class="sourceLineNo">548</span><a name="line.548">   * Asks for a short {@code Publisher} (length 20), requests some items (less than the length), consumes one item then</a>
+<span class="sourceLineNo">549</span><a name="line.549">   * cancels the sequence and verifies the publisher emitted at most the requested amount and stopped emitting (or terminated). </a>
+<span class="sourceLineNo">550</span><a name="line.550">   * &lt;p&gt;</a>
+<span class="sourceLineNo">551</span><a name="line.551">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.12'&gt;3.12&lt;/a&gt;</a>
+<span class="sourceLineNo">552</span><a name="line.552">   * &lt;p&gt;</a>
+<span class="sourceLineNo">553</span><a name="line.553">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 20.</a>
+<span class="sourceLineNo">554</span><a name="line.554">   * &lt;p&gt;</a>
+<span class="sourceLineNo">555</span><a name="line.555">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">556</span><a name="line.556">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">557</span><a name="line.557">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">558</span><a name="line.558">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">559</span><a name="line.559">   * &lt;li&gt;the cancellation indicator flag is properly persisted (may require volatile) and checked as part of the signal emission process.&lt;/li&gt;</a>
+<span class="sourceLineNo">560</span><a name="line.560">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">561</span><a name="line.561">   */</a>
+<span class="sourceLineNo">562</span><a name="line.562">  void required_spec312_cancelMustMakeThePublisherToEventuallyStopSignaling() throws Throwable;</a>
+<span class="sourceLineNo">563</span><a name="line.563">  /**</a>
+<span class="sourceLineNo">564</span><a name="line.564">   * Asks for a short {@code Publisher} (length 3) requests and consumes one element from it, cancels the {@code Subscription}</a>
+<span class="sourceLineNo">565</span><a name="line.565">   * , calls {@code System.gc()} and then checks if all references to the test {@code Subscriber} has been dropped (by checking</a>
+<span class="sourceLineNo">566</span><a name="line.566">   * the {@code WeakReference} has been emptied). </a>
+<span class="sourceLineNo">567</span><a name="line.567">   * &lt;p&gt;</a>
+<span class="sourceLineNo">568</span><a name="line.568">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.13'&gt;3.13&lt;/a&gt;</a>
+<span class="sourceLineNo">569</span><a name="line.569">   * &lt;p&gt;</a>
+<span class="sourceLineNo">570</span><a name="line.570">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">571</span><a name="line.571">   * &lt;p&gt;</a>
+<span class="sourceLineNo">572</span><a name="line.572">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">573</span><a name="line.573">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">574</span><a name="line.574">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">575</span><a name="line.575">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">576</span><a name="line.576">   * &lt;li&gt;the cancellation indicator flag is properly persisted (may require volatile) and checked as part of the signal emission process.&lt;/li&gt;</a>
+<span class="sourceLineNo">577</span><a name="line.577">   * &lt;li&gt;the {@code Publisher} stores the {@code Subscriber} reference somewhere which is then not cleaned up when the {@code Subscriber} is cancelled.</a>
+<span class="sourceLineNo">578</span><a name="line.578">   * Note that this may happen on many code paths in a {@code Publisher}, for example in an emission loop that terminates because of the</a>
+<span class="sourceLineNo">579</span><a name="line.579">   * {@code cancel} signal or because reaching a terminal state. Note also that eagerly nulling {@code Subscriber} references may not be necessary</a>
+<span class="sourceLineNo">580</span><a name="line.580">   * for this test to pass in case there is a self-contained chain of them (i.e., {@code Publisher.subscribe()} creates a chain of fresh</a>
+<span class="sourceLineNo">581</span><a name="line.581">   * {@code Subscriber} instances where each of them only references their downstream {@code Subscriber} thus the chain can get GC'd</a>
+<span class="sourceLineNo">582</span><a name="line.582">   * when the reference to the final {@code Subscriber} is dropped).</a>
+<span class="sourceLineNo">583</span><a name="line.583">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">584</span><a name="line.584">   */</a>
+<span class="sourceLineNo">585</span><a name="line.585">  void required_spec313_cancelMustMakeThePublisherEventuallyDropAllReferencesToTheSubscriber() throws Throwable;</a>
+<span class="sourceLineNo">586</span><a name="line.586">  /**</a>
+<span class="sourceLineNo">587</span><a name="line.587">   * Asks for a short {@code Publisher} (length 3) and requests {@code Long.MAX_VALUE} from it, verifying that the</a>
+<span class="sourceLineNo">588</span><a name="line.588">   * {@code Publisher} emits all of its items and completes normally</a>
+<span class="sourceLineNo">589</span><a name="line.589">   * and does not keep spinning attempting to fulfill the {@code Long.MAX_VALUE} demand by some means.</a>
+<span class="sourceLineNo">590</span><a name="line.590">   * &lt;p&gt;</a>
+<span class="sourceLineNo">591</span><a name="line.591">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.17'&gt;3.17&lt;/a&gt;</a>
+<span class="sourceLineNo">592</span><a name="line.592">   * &lt;p&gt;</a>
+<span class="sourceLineNo">593</span><a name="line.593">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">594</span><a name="line.594">   * &lt;p&gt;</a>
+<span class="sourceLineNo">595</span><a name="line.595">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">596</span><a name="line.596">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">597</span><a name="line.597">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">598</span><a name="line.598">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">599</span><a name="line.599">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">600</span><a name="line.600">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">601</span><a name="line.601">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">602</span><a name="line.602">   */</a>
+<span class="sourceLineNo">603</span><a name="line.603">  void required_spec317_mustSupportAPendingElementCountUpToLongMaxValue() throws Throwable;</a>
+<span class="sourceLineNo">604</span><a name="line.604">  /**</a>
+<span class="sourceLineNo">605</span><a name="line.605">   * Asks for a short {@code Publisher} (length 3) and requests {@code Long.MAX_VALUE} from it in total (split across</a>
+<span class="sourceLineNo">606</span><a name="line.606">   * two {@code Long.MAX_VALUE / 2} and one {@code request(1)}), verifying that the</a>
+<span class="sourceLineNo">607</span><a name="line.607">   * {@code Publisher} emits all of its items and completes normally.</a>
+<span class="sourceLineNo">608</span><a name="line.608">   * &lt;p&gt;</a>
+<span class="sourceLineNo">609</span><a name="line.609">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.17'&gt;3.17&lt;/a&gt;</a>
+<span class="sourceLineNo">610</span><a name="line.610">   * &lt;p&gt;</a>
+<span class="sourceLineNo">611</span><a name="line.611">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than 3.</a>
+<span class="sourceLineNo">612</span><a name="line.612">   * &lt;p&gt;</a>
+<span class="sourceLineNo">613</span><a name="line.613">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">614</span><a name="line.614">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">615</span><a name="line.615">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">616</span><a name="line.616">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">617</span><a name="line.617">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">618</span><a name="line.618">   * &lt;li&gt;if the {@code Publisher} implements adding individual request amounts together properly (not overflowing into zero or negative pending request amounts)</a>
+<span class="sourceLineNo">619</span><a name="line.619">   * or not properly deducing the number of emitted items from the pending amount,&lt;/li&gt;</a>
+<span class="sourceLineNo">620</span><a name="line.620">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">621</span><a name="line.621">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">622</span><a name="line.622">   */</a>
+<span class="sourceLineNo">623</span><a name="line.623">  void required_spec317_mustSupportACumulativePendingElementCountUpToLongMaxValue() throws Throwable;</a>
+<span class="sourceLineNo">624</span><a name="line.624">  /**</a>
+<span class="sourceLineNo">625</span><a name="line.625">   * Asks for a very long {@code Publisher} (up to {@code Integer.MAX_VALUE}), requests {@code Long.MAX_VALUE - 1} after</a>
+<span class="sourceLineNo">626</span><a name="line.626">   * each received item and expects no failure due to a potential overflow in the pending emission count while consuming </a>
+<span class="sourceLineNo">627</span><a name="line.627">   * 10 items and cancelling the sequence.</a>
+<span class="sourceLineNo">628</span><a name="line.628">   * &lt;p&gt;</a>
+<span class="sourceLineNo">629</span><a name="line.629">   * &lt;b&gt;Verifies rule:&lt;/b&gt; &lt;a href='https://github.com/reactive-streams/reactive-streams-jvm#3.17'&gt;3.17&lt;/a&gt;</a>
+<span class="sourceLineNo">630</span><a name="line.630">   * &lt;p&gt;</a>
+<span class="sourceLineNo">631</span><a name="line.631">   * The test is not executed if {@link org.reactivestreams.tck.PublisherVerification#maxElementsFromPublisher()} is less than {@code Integer.MAX_VALUE}.</a>
+<span class="sourceLineNo">632</span><a name="line.632">   * &lt;p&gt;</a>
+<span class="sourceLineNo">633</span><a name="line.633">   * The request pattern is one {@code request(1)} upfront and ten {@code request(Long.MAX_VALUE - 1)} after.</a>
+<span class="sourceLineNo">634</span><a name="line.634">   * &lt;p&gt;</a>
+<span class="sourceLineNo">635</span><a name="line.635">   * If this test fails, the following could be checked within the {@code Publisher} implementation:</a>
+<span class="sourceLineNo">636</span><a name="line.636">   * &lt;ul&gt;</a>
+<span class="sourceLineNo">637</span><a name="line.637">   * &lt;li&gt;the {@code TestEnvironment} has large enough timeout specified in case the {@code Publisher} has some time-delay behavior,&lt;/li&gt;</a>
+<span class="sourceLineNo">638</span><a name="line.638">   * &lt;li&gt;make sure the {@link #required_createPublisher1MustProduceAStreamOfExactly1Element()} and {@link #required_createPublisher3MustProduceAStreamOfExactly3Elements()} tests pass,&lt;/li&gt;</a>
+<span class="sourceLineNo">639</span><a name="line.639">   * &lt;li&gt;if the {@code Publisher} implementation considers the cumulative request amount it receives,&lt;/li&gt;</a>
+<span class="sourceLineNo">640</span><a name="line.640">   * &lt;li&gt;if the {@code Publisher} implements adding individual request amounts together properly (not overflowing into zero or negative pending request amounts)</a>
+<span class="sourceLineNo">641</span><a name="line.641">   * or not properly deducing the number of emitted items from the pending amount,&lt;/li&gt;</a>
+<span class="sourceLineNo">642</span><a name="line.642">   * &lt;li&gt;if the {@code Publisher} doesn't lose any {@code request()} signal and the state transition from idle -&amp;gt; emitting or emitting -&amp;gt; keep emitting works properly.&lt;/li&gt;</a>
+<span class="sourceLineNo">643</span><a name="line.643">   * &lt;/ul&gt;</a>
+<span class="sourceLineNo">644</span><a name="line.644">   */</a>
+<span class="sourceLineNo">645</span><a name="line.645">  void required_spec317_mustNotSignalOnErrorWhenPendingAboveLongMaxValue() throws Throwable;</a>
+<span class="sourceLineNo">646</span><a name="line.646">}</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
