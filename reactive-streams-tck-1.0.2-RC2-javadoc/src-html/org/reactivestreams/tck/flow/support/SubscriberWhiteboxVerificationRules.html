@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span><a name="line.1">/************************************************************************</a>
+<span class="sourceLineNo">002</span><a name="line.2"> * Licensed under Public Domain (CC0)                                    *</a>
+<span class="sourceLineNo">003</span><a name="line.3"> *                                                                       *</a>
+<span class="sourceLineNo">004</span><a name="line.4"> * To the extent possible under law, the person who associated CC0 with  *</a>
+<span class="sourceLineNo">005</span><a name="line.5"> * this code has waived all copyright and related or neighboring         *</a>
+<span class="sourceLineNo">006</span><a name="line.6"> * rights to this code.                                                  *</a>
+<span class="sourceLineNo">007</span><a name="line.7"> *                                                                       *</a>
+<span class="sourceLineNo">008</span><a name="line.8"> * You should have received a copy of the CC0 legalcode along with this  *</a>
+<span class="sourceLineNo">009</span><a name="line.9"> * work. If not, see &lt;http://creativecommons.org/publicdomain/zero/1.0/&gt;.*</a>
+<span class="sourceLineNo">010</span><a name="line.10"> ************************************************************************/</a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span><a name="line.12">package org.reactivestreams.tck.flow.support;</a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14">/**</a>
+<span class="sourceLineNo">015</span><a name="line.15"> * Internal TCK use only.</a>
+<span class="sourceLineNo">016</span><a name="line.16"> * Add / Remove tests for PublisherVerificaSubscriberWhiteboxVerification here to make sure that they arre added/removed in the other places.</a>
+<span class="sourceLineNo">017</span><a name="line.17"> */</a>
+<span class="sourceLineNo">018</span><a name="line.18">public interface SubscriberWhiteboxVerificationRules {</a>
+<span class="sourceLineNo">019</span><a name="line.19">  void required_exerciseWhiteboxHappyPath() throws Throwable;</a>
+<span class="sourceLineNo">020</span><a name="line.20">  void required_spec201_mustSignalDemandViaSubscriptionRequest() throws Throwable;</a>
+<span class="sourceLineNo">021</span><a name="line.21">  void untested_spec202_shouldAsynchronouslyDispatch() throws Exception;</a>
+<span class="sourceLineNo">022</span><a name="line.22">  void required_spec203_mustNotCallMethodsOnSubscriptionOrPublisherInOnComplete() throws Throwable;</a>
+<span class="sourceLineNo">023</span><a name="line.23">  void required_spec203_mustNotCallMethodsOnSubscriptionOrPublisherInOnError() throws Throwable;</a>
+<span class="sourceLineNo">024</span><a name="line.24">  void untested_spec204_mustConsiderTheSubscriptionAsCancelledInAfterRecievingOnCompleteOrOnError() throws Exception;</a>
+<span class="sourceLineNo">025</span><a name="line.25">  void required_spec205_mustCallSubscriptionCancelIfItAlreadyHasAnSubscriptionAndReceivesAnotherOnSubscribeSignal() throws Throwable;</a>
+<span class="sourceLineNo">026</span><a name="line.26">  void untested_spec206_mustCallSubscriptionCancelIfItIsNoLongerValid() throws Exception;</a>
+<span class="sourceLineNo">027</span><a name="line.27">  void untested_spec207_mustEnsureAllCallsOnItsSubscriptionTakePlaceFromTheSameThreadOrTakeCareOfSynchronization() throws Exception;</a>
+<span class="sourceLineNo">028</span><a name="line.28">  void required_spec208_mustBePreparedToReceiveOnNextSignalsAfterHavingCalledSubscriptionCancel() throws Throwable;</a>
+<span class="sourceLineNo">029</span><a name="line.29">  void required_spec209_mustBePreparedToReceiveAnOnCompleteSignalWithPrecedingRequestCall() throws Throwable;</a>
+<span class="sourceLineNo">030</span><a name="line.30">  void required_spec209_mustBePreparedToReceiveAnOnCompleteSignalWithoutPrecedingRequestCall() throws Throwable;</a>
+<span class="sourceLineNo">031</span><a name="line.31">  void required_spec210_mustBePreparedToReceiveAnOnErrorSignalWithPrecedingRequestCall() throws Throwable;</a>
+<span class="sourceLineNo">032</span><a name="line.32">  void required_spec210_mustBePreparedToReceiveAnOnErrorSignalWithoutPrecedingRequestCall() throws Throwable;</a>
+<span class="sourceLineNo">033</span><a name="line.33">  void untested_spec211_mustMakeSureThatAllCallsOnItsMethodsHappenBeforeTheProcessingOfTheRespectiveEvents() throws Exception;</a>
+<span class="sourceLineNo">034</span><a name="line.34">  void untested_spec212_mustNotCallOnSubscribeMoreThanOnceBasedOnObjectEquality_specViolation() throws Throwable;</a>
+<span class="sourceLineNo">035</span><a name="line.35">  void untested_spec213_failingOnSignalInvocation() throws Exception;</a>
+<span class="sourceLineNo">036</span><a name="line.36">  void required_spec213_onSubscribe_mustThrowNullPointerExceptionWhenParametersAreNull() throws Throwable;</a>
+<span class="sourceLineNo">037</span><a name="line.37">  void required_spec213_onNext_mustThrowNullPointerExceptionWhenParametersAreNull() throws Throwable;</a>
+<span class="sourceLineNo">038</span><a name="line.38">  void required_spec213_onError_mustThrowNullPointerExceptionWhenParametersAreNull() throws Throwable;</a>
+<span class="sourceLineNo">039</span><a name="line.39">  void untested_spec301_mustNotBeCalledOutsideSubscriberContext() throws Exception;</a>
+<span class="sourceLineNo">040</span><a name="line.40">  void required_spec308_requestMustRegisterGivenNumberElementsToBeProduced() throws Throwable;</a>
+<span class="sourceLineNo">041</span><a name="line.41">  void untested_spec310_requestMaySynchronouslyCallOnNextOnSubscriber() throws Exception;</a>
+<span class="sourceLineNo">042</span><a name="line.42">  void untested_spec311_requestMaySynchronouslyCallOnCompleteOrOnError() throws Exception;</a>
+<span class="sourceLineNo">043</span><a name="line.43">  void untested_spec314_cancelMayCauseThePublisherToShutdownIfNoOtherSubscriptionExists() throws Exception;</a>
+<span class="sourceLineNo">044</span><a name="line.44">  void untested_spec315_cancelMustNotThrowExceptionAndMustSignalOnError() throws Exception;</a>
+<span class="sourceLineNo">045</span><a name="line.45">  void untested_spec316_requestMustNotThrowExceptionAndMustOnErrorTheSubscriber() throws Exception;</a>
+<span class="sourceLineNo">046</span><a name="line.46">}</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
