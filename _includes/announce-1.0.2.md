@@ -16,7 +16,7 @@ Documentation
 
 * [Specification](https://github.com/reactive-streams/reactive-streams-jvm/tree/v1.0.2#specification)
 * [Java API Documentation](http://www.reactive-streams.org/reactive-streams-1.0.2-javadoc)
- [Flow Adapters Java API Documentation](http://www.reactive-streams.org/reactive-streams-flow-adapters-1.0.2-javadoc)
+* [Flow Adapters Java API Documentation](http://www.reactive-streams.org/reactive-streams-flow-adapters-1.0.2-javadoc)
 * [TCK README](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.2/tck/README.md)
 * [Flow TCK README](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.2/tck-flow/README.md)
 
@@ -26,7 +26,7 @@ Artifacts
 * *the Reactive Streams interfaces*
   * `org.reactivestreams:reactive-streams:1.0.2`
 
-* *the Reactive Streams interfaces*
+* *the Reactive Streams Flow adapters*
   * `org.reactivestreams:reactive-streams-flow-adapters:1.0.2`
 
 * *the Reactive Streams TCK*
@@ -78,7 +78,7 @@ We'd like to thank everyone involved, all contributors and everyone who has give
 
 ## Flow adapters
 
-An adapter library has been created to convert `org.reactivestreams` to `java.util.concurrent.Flow` and vice versa. Read more about it [here](http://www.reactive-streams.org/reactive-streams-flow-adapters-1.0.2-javadoc)
+An adapter library has been created to convert `org.reactivestreams` to `java.util.concurrent.Flow` and vice versa. Read more about it [here](http://www.reactive-streams.org/reactive-streams-flow-adapters-1.0.2-javadoc).
 
 ~~~xml
 <dependency>
@@ -90,7 +90,7 @@ An adapter library has been created to convert `org.reactivestreams` to `java.ut
 
 ## Flow TCK
 
-A TCK artifact has been created to allow for direct TCK verification of `java.util.concurrent.Flow` implementations. Read more about it [here](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.2/tck-flow/README.md)
+A TCK artifact has been created to allow for direct TCK verification of `java.util.concurrent.Flow` implementations, and you can read more about it [here](https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.2/tck-flow/README.md).
 
 ~~~xml
 <dependency>
@@ -111,7 +111,7 @@ A TCK artifact has been created to allow for direct TCK verification of `java.ut
 ## TCK alterations 1.0.2
 
 - Added support for Publisher verification of Publishers who do coordinated emission, i.e. where elements only are emitted after all current Subscribers have signalled demand. ([#284](https://github.com/reactive-streams/reactive-streams-jvm/issues/284))
-- The `SubscriberWhiteboxVerification` has been given more user friendly error messages in the case where the user forgets to call `registerOnSubscribe`. (#416)[https://github.com/reactive-streams/reactive-streams-jvm/pull/416]
+- The `SubscriberWhiteboxVerification` has been given more user friendly error messages in the case where the user forgets to call `registerOnSubscribe`. ([#416](https://github.com/reactive-streams/reactive-streams-jvm/pull/416))
 
 ## Contributors
   + Roland Kuhn [(@rkuhn)](https://github.com/rkuhn)
@@ -129,7 +129,7 @@ A TCK artifact has been created to allow for direct TCK verification of `java.ut
   + Rossen Stoyanchev [(@rstoyanchev)](https://github.com/rstoyanchev)
   + Björn Hamels [(@BjornHamels)](https://github.com/BjornHamels)
   + Jake Wharton [(@JakeWharton)](https://github.com/JakeWharton)
-  + Anthony Vanelverdinghe[(@anthonyvdotbe)](https://github.com/anthonyvdotbe)
+  + Anthony Vanelverdinghe [(@anthonyvdotbe)](https://github.com/anthonyvdotbe)
   + Kazuhiro Sera [(@seratch)](https://github.com/seratch)
   + Dávid Karnok [(@akarnokd)](https://github.com/akarnokd)
   + Evgeniy Getman [(@egetman)](https://github.com/egetman)
